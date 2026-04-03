@@ -3,13 +3,18 @@
 cd "$(dirname "$0")" || exit 1
 
 if [ -z "${1:-}" ]; then
-  echo "Usage: $0 <example-directory>"
-  echo "Example: $0 ../examples/basic"
+  echo "Usage: $0 <example-name>"
+  echo "Example: $0 basic"
   exit 1
 fi
 
+example_arg="$1"
+if [[ "$example_arg" != */* ]]; then
+  example_arg="../examples/$example_arg"
+fi
+
 export EXAMPLE_DIR
-EXAMPLE_DIR="$(cd "$1" && pwd)"
+EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
 
 required_files=(
   "confs/elasticsearch.yml"

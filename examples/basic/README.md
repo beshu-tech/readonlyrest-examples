@@ -13,7 +13,7 @@ Demonstrates ReadonlyREST's core multi-tenancy feature: different users get isol
 ## How to run
 
 ```bash
-./enviroment/run.sh ./examples/basic
+./enviroment/run.sh basic
 ```
 
 `ROR_ACTIVATION_KEY` must be set in your shell environment before running.

@@ -5,8 +5,6 @@ FROM docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}
 ARG ES_VERSION=please_set_es_version_arg
 ARG ROR_VERSION=please_set_ror_version_arg
 
-COPY conf/es/readonlyrest.yml /usr/share/elasticsearch/config/readonlyrest.yml
-COPY conf/es/elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
 COPY conf/es/log4j2.properties /usr/share/elasticsearch/config/log4j2.properties
 COPY conf/es/ror-keystore.jks /usr/share/elasticsearch/config/ror-keystore.jks
 COPY conf/es/ca.crt /usr/share/elasticsearch/config/ca.crt

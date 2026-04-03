@@ -43,31 +43,7 @@ elif greater_than_or_equal "$KBN_VERSION" "7.9.0" ; then
   /usr/share/kibana/node/bin/node plugins/readonlyrestkbn/ror-tools.js patch --I_UNDERSTAND_AND_ACCEPT_KBN_PATCHING=yes
 fi
 
-  if greater_than_or_equal "$KBN_VERSION" "7.9.0"; then
-    case "${ROR_LICENSE_EDITION:-}" in
-      ENT)
-        mv /usr/share/kibana/config/enterprise-ror-newplatform-kibana.yml \
-          /usr/share/kibana/config/kibana.yml
-        ;;
-      PRO)
-        mv /usr/share/kibana/config/pro-ror-newplatform-kibana.yml \
-          /usr/share/kibana/config/kibana.yml
-        ;;
-      FREE)
-        mv /usr/share/kibana/config/free-ror-newplatform-kibana.yml \
-          /usr/share/kibana/config/kibana.yml
-        ;;
-      "")
-        echo "ERROR: ROR_LICENSE_EDITION is not set" >&2
-        exit 1
-        ;;
-      *)
-        echo "ERROR: Unsupported ROR_LICENSE_EDITION='${ROR_LICENSE_EDITION}'" >&2
-        exit 2
-        ;;
-    esac
-  else
-    mv /usr/share/kibana/config/ror-oldplatform-kibana.yml /usr/share/kibana/config/kibana.yml
+  if ! greater_than_or_equal "$KBN_VERSION" "7.9.0"; then
     rm -rf /usr/share/kibana/optimize # for some reason we have to remove it and let kibana optimize it on startup
   fi
 

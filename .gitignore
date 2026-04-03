@@ -1,0 +1,5 @@
+.idea
+**/ror-cluster.log
+**/.DS_Store
+**/.env
+**/subst-xpack

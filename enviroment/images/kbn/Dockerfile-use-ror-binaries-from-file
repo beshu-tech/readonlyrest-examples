@@ -1,0 +1,23 @@
+ARG KBN_VERSION=please_set_kbn_version_arg
+
+FROM docker.elastic.co/kibana/kibana:${KBN_VERSION}
+
+ARG KBN_VERSION=please_set_kbn_version_arg
+ARG ROR_FILE=please_set_ror_file_path
+ARG ROR_LICENSE_EDITION=please_set_ror_license_edition_arg
+
+COPY conf/kbn/ror-oldplatform-kibana.yml /usr/share/kibana/config/ror-oldplatform-kibana.yml
+COPY conf/kbn/enterprise-ror-newplatform-kibana.yml /usr/share/kibana/config/enterprise-ror-newplatform-kibana.yml
+COPY conf/kbn/pro-ror-newplatform-kibana.yml /usr/share/kibana/config/pro-ror-newplatform-kibana.yml
+COPY conf/kbn/free-ror-newplatform-kibana.yml /usr/share/kibana/config/free-ror-newplatform-kibana.yml
+COPY conf/kbn/kibana.crt /usr/share/kibana/config/kibana.crt
+COPY conf/kbn/kibana.key /usr/share/kibana/config/kibana.key
+COPY images/kbn/install-ror-kbn-using-file.sh /tmp/install-ror.sh
+COPY $ROR_FILE /tmp/ror.zip
+
+USER root
+
+RUN /tmp/install-ror.sh && \
+    chown -R kibana:kibana /usr/share/kibana/config
+
+USER kibana

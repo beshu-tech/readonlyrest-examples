@@ -1,0 +1,90 @@
+services:
+
+  es-ror:
+    build:
+      context: .
+      dockerfile: images/es/${ES_DOCKERFILE:-ES_DOCKERFILE_NOT_CONFIGURED}
+      args:
+        ES_VERSION: ${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
+        ROR_VERSION: ${ROR_ES_VERSION:-ROR_ES_VERSION_NOT_CONFIGURED}
+        ROR_FILE: ${ES_ROR_FILE:-ES_ROR_FILE_NOT_CONFIGURED}
+    ports:
+      - "19200:9200"
+      - "19300:9300"
+      - "15005:5005"
+      - "9010:9010" # jvisualvm jmx connection port
+    environment:
+      - cluster.name=ror-es-cluster
+      - node.name=es-ror-single
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dcom.readonlyrest.settings.loading.attempts.count=1 -Dcom.readonlyrest.settings.loading.delay=0s -Dcom.readonlyrest.settings.maxSize=10MB -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.rmi.port=9010 -Djava.rmi.server.hostname=127.0.0.1"
+      - ES_VERSION=${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fksS --connect-timeout 3 --max-time 5 --retry 2 --retry-connrefused -u admin:admin https://127.0.0.1:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    networks:
+      - ror-network
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  kbn-ror:
+    build:
+      context: .
+      dockerfile: images/kbn/${KBN_DOCKERFILE:-KBN_DOCKERFILE_NOT_CONFIGURED}
+      args:
+        KBN_VERSION: ${KBN_VERSION:-KBN_VERSION_NOT_CONFIGURED}
+        ROR_VERSION: ${ROR_KBN_VERSION:-ROR_KBN_VERSION_NOT_CONFIGURED}
+        ROR_FILE: ${KBN_ROR_FILE:-KBN_ROR_FILE_NOT_CONFIGURED}
+        ROR_LICENSE_EDITION: ${ROR_LICENSE_EDITION:-ROR_LICENSE_EDITION_NOT_CONFIGURED}
+    depends_on:
+      es-ror:
+        condition: service_healthy
+    ports:
+      - "15601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: https://es-ror:9200
+      ROR_ACTIVATION_KEY: $ROR_ACTIVATION_KEY
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fksS --connect-timeout 3 --max-time 5 --retry 2 --retry-connrefused -u admin:admin https://127.0.0.1:5601/api/features >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    networks:
+      - ror-network
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  initializer:
+    build:
+      context: .
+      dockerfile: images/cluster-initializer/Dockerfile
+    depends_on:
+      es-ror:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_ADDRESS: https://es-ror:9200
+      ELASTICSEARCH_USER: kibana
+      ELASTICSEARCH_PASSWORD: kibana
+    healthcheck:
+      test: "test -f /tmp/init_done || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    volumes:
+      - ./init-scripts:/scripts
+    networks:
+      - ror-network
+
+networks:
+  ror-network:
+    driver: bridge

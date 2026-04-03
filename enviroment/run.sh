@@ -20,7 +20,6 @@ required_files=(
   "confs/elasticsearch.yml"
   "confs/readonlyrest.yml"
   "confs/kibana.yml"
-  ".env"
 )
 
 for required in "${required_files[@]}"; do
@@ -30,10 +29,9 @@ for required in "${required_files[@]}"; do
   fi
 done
 
-set -a
-# shellcheck source=/dev/null
-source "${EXAMPLE_DIR}/.env"
-set +a
+if [ -f "${EXAMPLE_DIR}/.env" ]; then
+  cp "${EXAMPLE_DIR}/.env" .env
+fi
 
 if ! docker version &>/dev/null; then
   echo "No Docker found. Docker is required to run this Sandbox. See https://docs.docker.com/engine/install/"

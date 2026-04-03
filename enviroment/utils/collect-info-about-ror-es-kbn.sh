@@ -2,9 +2,9 @@
 
 echo "Preparing Elasticsearch & Kibana with ROR environment ..."
 
-if [[ -e ".env-showcase" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env-showcase"; then
-  echo "Found .env-showcase - running in non-interactive mode ..."
-  source .env-showcase
+if [[ -e ".env" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env"; then
+  echo "Found .env - running in non-interactive mode ..."
+  source .env
 
   missing=()
   if [[ -z "${ES_VERSION:-}" ]]; then missing+=("ES_VERSION"); fi
@@ -29,11 +29,9 @@ if [[ -e ".env-showcase" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env-showcase"; the
   fi
 
   if [[ ${#missing[@]} -gt 0 ]]; then
-    echo "ERROR: .env-showcase is missing required variables: ${missing[*]}" >&2
+    echo "ERROR: .env is missing required variables: ${missing[*]}" >&2
     exit 1
   fi
-
-  cp .env-showcase .env
 
   if [[ "$ES_DOCKERFILE" == *"from-file"* ]]; then
     es_ror_info="FILE: $ES_ROR_FILE"

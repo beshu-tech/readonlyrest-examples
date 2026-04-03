@@ -11,7 +11,14 @@ fi
 export EXAMPLE_DIR
 EXAMPLE_DIR="$(cd "$1" && pwd)"
 
-for required in readonlyrest.yml kibana.yml init.sh .env; do
+required_files=(
+  "confs/elasticsearch.yml"
+  "confs/readonlyrest.yml"
+  "confs/kibana.yml"
+  ".env"
+)
+
+for required in "${required_files[@]}"; do
   if [ ! -f "${EXAMPLE_DIR}/${required}" ]; then
     echo "ERROR: Required file not found in example directory: ${required}"
     exit 1

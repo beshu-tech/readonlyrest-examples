@@ -27,7 +27,8 @@ services:
       retries: 30
       start_period: 60s
     volumes:
-      - ${EXAMPLE_DIR:-./conf/es}/readonlyrest.yml:/usr/share/elasticsearch/config/readonlyrest.yml:ro
+      - ${EXAMPLE_DIR:-./conf/es}/confs/readonlyrest.yml:/usr/share/elasticsearch/config/readonlyrest.yml:ro
+      - ${EXAMPLE_DIR:-./conf/es}/confs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     networks:
       - ror-network
     ulimits:
@@ -59,7 +60,7 @@ services:
       retries: 30
       start_period: 60s
     volumes:
-      - ${EXAMPLE_DIR:-./conf/kbn}/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - ${EXAMPLE_DIR:-./conf/kbn}/confs/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
     networks:
       - ror-network
     ulimits:
@@ -85,7 +86,7 @@ services:
       retries: 30
       start_period: 60s
     volumes:
-      - ${EXAMPLE_DIR:-./init-scripts}:/scripts
+      - ${EXAMPLE_DIR:-./init-scripts}/init:/scripts
     networks:
       - ror-network
 

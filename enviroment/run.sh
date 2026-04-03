@@ -2,6 +2,27 @@
 
 cd "$(dirname "$0")" || exit 1
 
+if [ -z "${1:-}" ]; then
+  echo "Usage: $0 <example-directory>"
+  echo "Example: $0 ../examples/basic"
+  exit 1
+fi
+
+export EXAMPLE_DIR
+EXAMPLE_DIR="$(cd "$1" && pwd)"
+
+for required in readonlyrest.yml kibana.yml init.sh .env; do
+  if [ ! -f "${EXAMPLE_DIR}/${required}" ]; then
+    echo "ERROR: Required file not found in example directory: ${required}"
+    exit 1
+  fi
+done
+
+set -a
+# shellcheck source=/dev/null
+source "${EXAMPLE_DIR}/.env"
+set +a
+
 if ! docker version &>/dev/null; then
   echo "No Docker found. Docker is required to run this Sandbox. See https://docs.docker.com/engine/install/"
   exit 1

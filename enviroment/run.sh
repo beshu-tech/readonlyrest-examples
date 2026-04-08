@@ -15,6 +15,7 @@ fi
 
 export EXAMPLE_DIR
 EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
+echo "$1" > .current-example
 
 required_files=(
   "confs/elasticsearch.yml"

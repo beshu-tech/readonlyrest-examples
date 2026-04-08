@@ -1,9 +1,3 @@
 #!/bin/sh -e
 
-echo "REWRITE_BASE_PATH_BY_KIBANA=$REWRITE_BASE_PATH_BY_KIBANA"
-
-if [ "$REWRITE_BASE_PATH_BY_KIBANA" = "true" ]; then
-  exec httpd -DREWRITE_BASE_PATH_BY_KIBANA -DFOREGROUND
-else
-  exec httpd -DFOREGROUND
-fi
+exec httpd -DFOREGROUND

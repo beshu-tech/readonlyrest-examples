@@ -2,13 +2,11 @@
 
 cd /scripts
 
-for script in *.sh; do
-  if [ -f "$script" ]; then
-    echo "Running $script..."
-    bash "$script"
-    echo "--------------------------------"
-  fi
-done
+if [ -f "init.sh" ]; then
+  echo "Running init.sh..."
+  bash init.sh
+  echo "--------------------------------"
+fi
 
 touch /tmp/init_done
 tail -f /dev/null

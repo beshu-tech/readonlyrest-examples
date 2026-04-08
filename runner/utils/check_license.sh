@@ -1,7 +1,7 @@
 #!/bin/bash
 # License detection and validation utilities.
 # Meant to be sourced from run.sh, not executed directly.
-# Assumes the working directory is the enviroment/ directory.
+# Assumes the working directory is the runner/ directory.
 # Requires: EXAMPLE_DIR, ROR_ACTIVATION_KEY (env vars)
 
 detect_license_edition() {

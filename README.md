@@ -24,6 +24,7 @@ To stop and clean up:
 | Example | Description |
 |---------|-------------|
 | [basic](examples/basic) | Multi-tenancy: isolated Kibana spaces and index access per user |
+| [kibana-reverse-proxy](examples/kibana-reverse-proxy) | Kibana behind an Apache HTTPS reverse proxy with load balancing across two Kibana instances |
 
 ## Project structure
 
@@ -32,13 +33,20 @@ examples/                  # One directory per example
   basic/
     .env                   # ES/KBN/ROR versions and Dockerfile choice (optional)
     confs/                 # elasticsearch.yml, kibana.yml, readonlyrest.yml
-    init/                  # Init scripts run after the cluster starts
-    README.md
+    scripts/               # Lifecycle scripts: init.sh (data seeding), post-start.sh (optional)
+
+  kibana-reverse-proxy/
+    .env
+    confs/                 # elasticsearch.yml, kibana.yml, readonlyrest.yml
+    docker-compose.override.yml  # Additional services (reverse proxy)
+    images/                # Dockerfiles for example-specific services
+    scripts/               # init.sh, post-start.sh
 
 runner/                    # Shared Docker infrastructure (used by all examples)
-  run.sh                   # Main entry point (also at repo root)
-  clean.sh                 # Stop and remove containers (also at repo root)
+  run.sh                   # Main entry point
+  clean.sh                 # Stop and remove containers
   docker-compose.yml
+  templates/               # Docker Compose templates (e.g. Kibana instance)
   images/                  # Dockerfiles for ES, KBN, and cluster-initializer
   conf/                    # TLS certs and shared config (log4j2, keystores)
   utils/                   # Helper scripts (example setup, version collection, license detection)
@@ -58,5 +66,7 @@ If no `.env` is provided, the script falls back to interactive prompts to collec
    - `confs/readonlyrest.yml`
    - `confs/kibana.yml`
 3. Optionally add a `.env` to pin ES/KBN/ROR versions (see `examples/basic/.env` for the format)
-4. Optionally add `init/init.sh` to seed data after the cluster starts (it can `source /usr/local/lib/ror-utils.sh` for helper functions like `createIndex`, `putDocument`, etc.)
-5. Run it: `./run.sh my-example`
+4. Optionally add `scripts/init.sh` to seed data after the cluster starts (it can `source /usr/local/lib/ror-utils.sh` for helper functions like `createIndex`, `putDocument`, etc.)
+5. Optionally add `scripts/post-start.sh` to print custom access instructions or run post-startup steps; if absent, the default Kibana URL is printed
+6. Optionally add `docker-compose.override.yml` to define extra services (e.g. a reverse proxy); it is automatically picked up and merged with the base compose file
+7. Run it: `./run.sh my-example`

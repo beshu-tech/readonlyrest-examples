@@ -2,5 +2,5 @@
 **/ror-cluster.log
 **/.DS_Store
 **/subst-xpack
-enviroment/.env
-enviroment/.current-example
+runner/.env
+runner/.current-example

@@ -10,13 +10,13 @@ Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticse
 
 ```bash
 export ROR_ACTIVATION_KEY="your-key-here"
-./enviroment/run.sh basic
+./run.sh basic
 ```
 
 To stop and clean up:
 
 ```bash
-./enviroment/clean.sh
+./clean.sh
 ```
 
 ## Available examples
@@ -35,9 +35,9 @@ examples/                  # One directory per example
     init/                  # Init scripts run after the cluster starts
     README.md
 
-enviroment/                # Shared Docker infrastructure (used by all examples)
-  run.sh                   # Main entry point
-  clean.sh                 # Stop and remove containers
+runner/                    # Shared Docker infrastructure (used by all examples)
+  run.sh                   # Main entry point (also at repo root)
+  clean.sh                 # Stop and remove containers (also at repo root)
   docker-compose.yml
   images/                  # Dockerfiles for ES, KBN, and cluster-initializer
   conf/                    # TLS certs and shared config (log4j2, keystores)
@@ -59,4 +59,4 @@ If no `.env` is provided, the script falls back to interactive prompts to collec
    - `confs/kibana.yml`
 3. Optionally add a `.env` to pin ES/KBN/ROR versions (see `examples/basic/.env` for the format)
 4. Optionally add `init/init.sh` to seed data after the cluster starts (it can `source /usr/local/lib/ror-utils.sh` for helper functions like `createIndex`, `putDocument`, etc.)
-5. Run it: `./enviroment/run.sh my-example`
+5. Run it: `./run.sh my-example`

@@ -60,29 +60,11 @@ echo -e "
 "
 
 ./utils/collect-info-about-ror-es-kbn.sh
-
-# Call the extract helper using an explicit relative path (./../utils/...)
-if output="$(./utils/extract_license_edition.sh "${ROR_ACTIVATION_KEY}" 2>&1)"; then
-  rc=0
-else
-  rc=$?
-fi
-
-if [ $rc -ne 0 ]; then
-  echo "ERROR: Failed to extract the ROR license edition (exit code: $rc)." >&2
-  echo "$output" >&2
-  exit $rc
-elif [ -z "$output" ]; then
-  echo "ERROR: Could not determine the ROR license edition (the extract_license_edition helper returned no result)." >&2
-  exit 2
-else
-  export ROR_LICENSE_EDITION="$output"
-  echo "Auto-detected ROR_LICENSE_EDITION=$ROR_LICENSE_EDITION"
-fi
+. ./utils/check_license.sh "$example_arg"
 
 echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
 
-docker compose --profile "${ROR_LICENSE_EDITION}" up -d --build --wait --remove-orphans --force-recreate
+docker compose up -d --build --wait --remove-orphans --force-recreate
 
 docker compose logs -f > ror-cluster.log 2>&1 &
 

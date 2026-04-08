@@ -4,7 +4,6 @@ FROM docker.elastic.co/kibana/kibana:${KBN_VERSION}
 
 ARG KBN_VERSION=please_set_kbn_version_arg
 ARG ROR_VERSION=please_set_ror_version_arg
-ARG ROR_LICENSE_EDITION=please_set_ror_license_edition_arg
 
 COPY conf/kbn/kibana.crt /usr/share/kibana/config/kibana.crt
 COPY conf/kbn/kibana.key /usr/share/kibana/config/kibana.key

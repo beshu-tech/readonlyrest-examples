@@ -2,27 +2,13 @@
 
 cd "$(dirname "$0")" || exit 1
 
-example_name="${1:-}"
-if [ -z "$example_name" ]; then
-  if [ -f .current-example ]; then
-    example_name="$(cat .current-example)"
-    echo "No example specified, using last run: $example_name"
-  else
-    echo "No running example found. Nothing to clean."
-    echo "To clean a specific example, run: $0 <example-name>"
-    exit 0
-  fi
+if [ -z "${1:-}" ] && [ ! -f .current-example ]; then
+  echo "No running example found. Nothing to clean."
+  echo "To clean a specific example, run: $0 <example-name>"
+  exit 0
 fi
 
-example_arg="$example_name"
-if [[ "$example_arg" != */* ]]; then
-  example_arg="../examples/$example_arg"
-fi
-
-export EXAMPLE_DIR
-EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
-
-# shellcheck source=utils/setup-compose-files.sh
-source "$(dirname "$0")/utils/setup-compose-files.sh"
+# shellcheck source=utils/resolve-example-dir.sh
+source "$(dirname "$0")/utils/resolve-example-dir.sh" "${1:-}"
 
 docker compose "${COMPOSE_FILES[@]}" rm --stop --force

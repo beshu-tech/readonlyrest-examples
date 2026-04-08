@@ -2,47 +2,8 @@
 
 cd "$(dirname "$0")" || exit 1
 
-example_name="${1:-}"
-if [ -z "$example_name" ]; then
-  if [ -f .current-example ]; then
-    example_name="$(cat .current-example)"
-    echo "No example specified, using last run: $example_name"
-  else
-    echo "Usage: $0 <example-name>"
-    echo "Example: $0 basic"
-    exit 1
-  fi
-fi
-
-example_arg="$example_name"
-if [[ "$example_arg" != */* ]]; then
-  example_arg="../examples/$example_arg"
-fi
-
-export EXAMPLE_DIR
-EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
-echo "$example_name" > .current-example
-
-required_files=(
-  "confs/elasticsearch.yml"
-  "confs/readonlyrest.yml"
-  "confs/kibana.yml"
-)
-
-for required in "${required_files[@]}"; do
-  if [ ! -f "${EXAMPLE_DIR}/${required}" ]; then
-    echo "ERROR: Required file not found in example directory: ${required}"
-    exit 1
-  fi
-done
-
-# copy .env to current dir so collect-info-about-ror-es-kbn.sh can find it
-if [ -f "${EXAMPLE_DIR}/.env" ]; then
-  cp "${EXAMPLE_DIR}/.env" .env
-fi
-
-# shellcheck source=utils/setup-compose-files.sh
-source "$(dirname "$0")/utils/setup-compose-files.sh"
+# shellcheck source=utils/prepare-example.sh
+source "$(dirname "$0")/utils/prepare-example.sh" "${1:-}"
 
 if ! docker version &>/dev/null; then
   echo "No Docker found. Docker is required to run this Sandbox. See https://docs.docker.com/engine/install/"
@@ -71,7 +32,7 @@ echo -e "
 "
 
 ./utils/collect-info-about-ror-es-kbn.sh
-. ./utils/check_license.sh "$example_arg"
+. ./utils/check_license.sh "$(basename "$EXAMPLE_DIR")"
 
 echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
 

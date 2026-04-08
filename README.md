@@ -41,7 +41,7 @@ runner/                    # Shared Docker infrastructure (used by all examples)
   docker-compose.yml
   images/                  # Dockerfiles for ES, KBN, and cluster-initializer
   conf/                    # TLS certs and shared config (log4j2, keystores)
-  utils/                   # Helper scripts (version collection, license detection)
+  utils/                   # Helper scripts (example setup, version collection, license detection)
 ```
 
 ## How it works

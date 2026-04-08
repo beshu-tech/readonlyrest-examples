@@ -86,10 +86,11 @@ services:
       retries: 30
       start_period: 60s
     volumes:
-      - ${EXAMPLE_DIR:-./init-scripts}/init:/scripts
+      - ${EXAMPLE_DIR:-./init-scripts}/scripts:/scripts
     networks:
       - ror-network
 
 networks:
   ror-network:
     driver: bridge
+ 

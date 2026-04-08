@@ -123,8 +123,8 @@ echo -e "
 ***********************************************************************
 "
 
-if [ -f "${EXAMPLE_DIR}/post-start.sh" ]; then
-  source "${EXAMPLE_DIR}/post-start.sh"
+if [ -f "${EXAMPLE_DIR}/scripts/post-start.sh" ]; then
+  source "${EXAMPLE_DIR}/scripts/post-start.sh"
 else
   echo -e "You can access ROR KBN here: https://localhost:15601"
   open https://localhost:15601

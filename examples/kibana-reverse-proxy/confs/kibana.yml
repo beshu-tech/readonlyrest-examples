@@ -1,4 +1,4 @@
-server.name: ${SERVER_NAME:-kbn-ror}
+server.name: ${SERVER_NAME}
 server.host: 0.0.0.0
 server.basePath: /ror-demo
 server.rewriteBasePath: true

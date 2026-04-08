@@ -24,22 +24,26 @@ if [ -n "${1:-}" ]; then
   fi
 
   KBN_INSTANCES=${KBN_INSTANCES:-1}
-  if [ "${KBN_INSTANCES}" -gt 1 ]; then
-    GENERATED_INSTANCES_FILE="$(mktemp /tmp/ror-kbn-instances-XXXXXX)"
-    echo "services:" > "$GENERATED_INSTANCES_FILE"
-    ENVIROMENT_DIR="$(pwd)"
-    for i in $(seq 2 "${KBN_INSTANCES}"); do
+  GENERATED_INSTANCES_FILE="$(mktemp /tmp/ror-kbn-instances-XXXXXX)"
+  echo "services:" > "$GENERATED_INSTANCES_FILE"
+  ENVIROMENT_DIR="$(pwd)"
+  KIBANA_YML="${EXAMPLE_DIR}/confs/kibana.yml"
+  for i in $(seq 1 "${KBN_INSTANCES}"); do
+    if [ "$i" -eq 1 ]; then
+      KBN_NAME="kbn-ror"
+      PORT=15601
+    else
+      KBN_NAME="kbn-ror-${i}"
       PORT=$((15600 + i))
-      KIBANA_YML="${EXAMPLE_DIR}/confs/kibana-${i}.yml"
-      sed \
-        -e "s|@@KBN_INSTANCE_NAME@@|kbn-ror-${i}|g" \
-        -e "s|@@KBN_INSTANCE_PORT@@|${PORT}|g" \
-        -e "s|@@KBN_INSTANCE_KIBANA_YML@@|${KIBANA_YML}|g" \
-        -e "s|@@ENVIROMENT_DIR@@|${ENVIROMENT_DIR}|g" \
-        templates/kbn-instance.yml.tpl >> "$GENERATED_INSTANCES_FILE"
-    done
-    COMPOSE_FILES+=(-f "$GENERATED_INSTANCES_FILE")
-  fi
+    fi
+    sed \
+      -e "s|@@KBN_INSTANCE_NAME@@|${KBN_NAME}|g" \
+      -e "s|@@KBN_INSTANCE_PORT@@|${PORT}|g" \
+      -e "s|@@KBN_INSTANCE_KIBANA_YML@@|${KIBANA_YML}|g" \
+      -e "s|@@ENVIROMENT_DIR@@|${ENVIROMENT_DIR}|g" \
+      templates/kbn-instance.yml.tpl >> "$GENERATED_INSTANCES_FILE"
+  done
+  COMPOSE_FILES+=(-f "$GENERATED_INSTANCES_FILE")
 fi
 
 docker compose "${COMPOSE_FILES[@]}" --profile ENT --profile PRO --profile FREE rm --stop --force

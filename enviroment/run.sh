@@ -31,6 +31,10 @@ done
 
 if [ -f "${EXAMPLE_DIR}/.env" ]; then
   cp "${EXAMPLE_DIR}/.env" .env
+  set -a
+  # shellcheck source=/dev/null
+  source .env
+  set +a
 fi
 
 if ! docker version &>/dev/null; then
@@ -43,7 +47,32 @@ if ! docker compose version &>/dev/null; then
   exit 2
 fi
 
-if ! docker compose config > /dev/null; then
+COMPOSE_FILES=(-f docker-compose.yml)
+
+if [ -f "${EXAMPLE_DIR}/docker-compose.override.yml" ]; then
+  COMPOSE_FILES+=(-f "${EXAMPLE_DIR}/docker-compose.override.yml")
+fi
+
+KBN_INSTANCES=${KBN_INSTANCES:-1}
+GENERATED_INSTANCES_FILE=""
+if [ "${KBN_INSTANCES}" -gt 1 ]; then
+  GENERATED_INSTANCES_FILE="$(mktemp /tmp/ror-kbn-instances-XXXXXX)"
+  echo "services:" > "$GENERATED_INSTANCES_FILE"
+  ENVIROMENT_DIR="$(pwd)"
+  for i in $(seq 2 "${KBN_INSTANCES}"); do
+    PORT=$((15600 + i))
+    KIBANA_YML="${EXAMPLE_DIR}/confs/kibana-${i}.yml"
+    sed \
+      -e "s|@@KBN_INSTANCE_NAME@@|kbn-ror-${i}|g" \
+      -e "s|@@KBN_INSTANCE_PORT@@|${PORT}|g" \
+      -e "s|@@KBN_INSTANCE_KIBANA_YML@@|${KIBANA_YML}|g" \
+      -e "s|@@ENVIROMENT_DIR@@|${ENVIROMENT_DIR}|g" \
+      templates/kbn-instance.yml.tpl >> "$GENERATED_INSTANCES_FILE"
+  done
+  COMPOSE_FILES+=(-f "$GENERATED_INSTANCES_FILE")
+fi
+
+if ! docker compose "${COMPOSE_FILES[@]}" config > /dev/null; then
   echo "Cannot validate docker compose configuration. It seems you have to upgrade your Docker installation. See https://docs.docker.com/engine/install/"
   exit 3
 fi
@@ -82,9 +111,9 @@ fi
 
 echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
 
-docker compose --profile "${ROR_LICENSE_EDITION}" up -d --build --wait --remove-orphans --force-recreate
+docker compose "${COMPOSE_FILES[@]}" --profile "${ROR_LICENSE_EDITION}" up -d --build --wait --remove-orphans --force-recreate
 
-docker compose logs -f > ror-cluster.log 2>&1 &
+docker compose "${COMPOSE_FILES[@]}" logs -f > ror-cluster.log 2>&1 &
 
 echo -e "
 ***********************************************************************
@@ -94,5 +123,9 @@ echo -e "
 ***********************************************************************
 "
 
-echo -e "You can access ROR KBN here: https://localhost:15601"
-open https://localhost:15601
+if [ -f "${EXAMPLE_DIR}/post-start.sh" ]; then
+  source "${EXAMPLE_DIR}/post-start.sh"
+else
+  echo -e "You can access ROR KBN here: https://localhost:15601"
+  open https://localhost:15601
+fi

@@ -1,0 +1,35 @@
+cluster.name: ror-cluster
+node.name: ror-es01
+network.host: 0.0.0.0
+
+path.repo: /tmp/repositories
+
+cluster.max_shards_per_node: 10000
+
+# XPACK SSL
+xpack.security.enabled: true
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: elasticsearch.key
+xpack.security.http.ssl.certificate: elasticsearch.crt
+xpack.security.http.ssl.certificate_authorities: ca.crt
+xpack.security.http.ssl.verification_mode: certificate
+xpack.security.http.ssl.client_authentication: optional
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: elasticsearch.key
+xpack.security.transport.ssl.certificate: elasticsearch.crt
+xpack.security.transport.ssl.certificate_authorities: ca.crt
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.client_authentication: optional
+
+# ROR SSL
+#xpack.security.enabled: false
+#http.type: ssl_netty4
+#readonlyrest.ssl.enable: true
+#readonlyrest.ssl.keystore_file: "ror-keystore.jks"
+#readonlyrest.ssl.keystore_pass: readonlyrest
+#readonlyrest.ssl.key_pass: readonlyrest
+#transport.type: ror_ssl_internode
+#readonlyrest.ssl_internode.enable: true
+#readonlyrest.ssl_internode.keystore_file: "ror-keystore.jks"
+#readonlyrest.ssl_internode.keystore_pass: readonlyrest
+#readonlyrest.ssl_internode.key_pass: readonlyrest

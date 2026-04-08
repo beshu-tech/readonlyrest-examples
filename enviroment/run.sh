@@ -61,7 +61,7 @@ if [ "${KBN_INSTANCES}" -gt 1 ]; then
   ENVIROMENT_DIR="$(pwd)"
   for i in $(seq 2 "${KBN_INSTANCES}"); do
     PORT=$((15600 + i))
-    KIBANA_YML="${EXAMPLE_DIR}/confs/kibana-${i}.yml"
+    KIBANA_YML="${EXAMPLE_DIR}/confs/kibana.yml"
     sed \
       -e "s|@@KBN_INSTANCE_NAME@@|kbn-ror-${i}|g" \
       -e "s|@@KBN_INSTANCE_PORT@@|${PORT}|g" \

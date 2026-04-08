@@ -2,20 +2,26 @@
 
 cd "$(dirname "$0")" || exit 1
 
-if [ -z "${1:-}" ]; then
-  echo "Usage: $0 <example-name>"
-  echo "Example: $0 basic"
-  exit 1
+example_name="${1:-}"
+if [ -z "$example_name" ]; then
+  if [ -f .current-example ]; then
+    example_name="$(cat .current-example)"
+    echo "No example specified, using last run: $example_name"
+  else
+    echo "Usage: $0 <example-name>"
+    echo "Example: $0 basic"
+    exit 1
+  fi
 fi
 
-example_arg="$1"
+example_arg="$example_name"
 if [[ "$example_arg" != */* ]]; then
   example_arg="../examples/$example_arg"
 fi
 
 export EXAMPLE_DIR
 EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
-echo "$1" > .current-example
+echo "$example_name" > .current-example
 
 required_files=(
   "confs/elasticsearch.yml"
@@ -69,7 +75,7 @@ echo -e "
 
 echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
 
-docker compose "${COMPOSE_FILES[@]}" --profile "${ROR_LICENSE_EDITION}" up -d --build --wait --remove-orphans --force-recreate
+docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate
 
 docker compose "${COMPOSE_FILES[@]}" logs -f > ror-cluster.log 2>&1 &
 

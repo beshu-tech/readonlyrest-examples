@@ -8,9 +8,9 @@ if [ -z "$example_name" ]; then
     example_name="$(cat .current-example)"
     echo "No example specified, using last run: $example_name"
   else
-    echo "Usage: $0 <example-name>"
-    echo "Example: $0 basic"
-    exit 1
+    echo "No running example found. Nothing to clean."
+    echo "To clean a specific example, run: $0 <example-name>"
+    exit 0
   fi
 fi
 
@@ -25,4 +25,4 @@ EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
 # shellcheck source=utils/setup-compose-files.sh
 source "$(dirname "$0")/utils/setup-compose-files.sh"
 
-docker compose "${COMPOSE_FILES[@]}" --profile ENT --profile PRO --profile FREE rm --stop --force
+docker compose "${COMPOSE_FILES[@]}" rm --stop --force

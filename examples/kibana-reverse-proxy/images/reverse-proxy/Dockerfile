@@ -17,6 +17,9 @@ RUN sed -i \
 RUN echo "ServerName localhost" >> /usr/local/apache2/conf/httpd.conf \
  && echo "Listen 443" >> /usr/local/apache2/conf/httpd.conf
 
+ARG REWRITE_BASE_PATH_BY_KIBANA=true
+ENV REWRITE_BASE_PATH_BY_KIBANA=${REWRITE_BASE_PATH_BY_KIBANA}
+
 COPY images/reverse-proxy/reverse-proxy.conf /usr/local/apache2/conf/extra/reverse-proxy.conf
 COPY images/reverse-proxy/reverse-proxy-entrypoint.sh /usr/local/bin/reverse-proxy-entrypoint.sh
 

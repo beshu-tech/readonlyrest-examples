@@ -1,6 +1,6 @@
   @@KBN_INSTANCE_NAME@@:
     build:
-      context: @@ENVIROMENT_DIR@@
+      context: @@ENVIRONMENT_DIR@@
       dockerfile: images/kbn/${KBN_DOCKERFILE:-KBN_DOCKERFILE_NOT_CONFIGURED}
       args:
         KBN_VERSION: ${KBN_VERSION:-KBN_VERSION_NOT_CONFIGURED}

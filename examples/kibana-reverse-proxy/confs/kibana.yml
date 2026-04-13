@@ -1,7 +1,6 @@
 server.name: ${SERVER_NAME}
 server.host: 0.0.0.0
 server.basePath: /ror-demo
-server.rewriteBasePath: false
 server.publicBaseUrl: "https://localhost:8443/ror-demo"
 
 elasticsearch.username: kibana

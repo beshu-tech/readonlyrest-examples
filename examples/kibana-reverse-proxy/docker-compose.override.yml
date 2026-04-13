@@ -1,15 +1,5 @@
 services:
 
-  kbn-ror:
-    entrypoint: ["/bin/bash", "/usr/local/bin/kbn-entrypoint.sh"]
-    volumes:
-      - ${EXAMPLE_DIR}/images/kbn/kbn-entrypoint.sh:/usr/local/bin/kbn-entrypoint.sh:ro
-
-  kbn-ror-2:
-    entrypoint: ["/bin/bash", "/usr/local/bin/kbn-entrypoint.sh"]
-    volumes:
-      - ${EXAMPLE_DIR}/images/kbn/kbn-entrypoint.sh:/usr/local/bin/kbn-entrypoint.sh:ro
-
   proxy:
     build:
       context: ${EXAMPLE_DIR}

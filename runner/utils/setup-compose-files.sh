@@ -9,8 +9,8 @@ if [ -f "${EXAMPLE_DIR}/.env" ]; then
   set +a
 fi
 
-_ENVIROMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-COMPOSE_FILES=(-f "${_ENVIROMENT_DIR}/docker-compose.yml")
+_ENVIRONMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+COMPOSE_FILES=(-f "${_ENVIRONMENT_DIR}/docker-compose.yml")
 
 if [ -f "${EXAMPLE_DIR}/docker-compose.override.yml" ]; then
   COMPOSE_FILES+=(-f "${EXAMPLE_DIR}/docker-compose.override.yml")
@@ -20,4 +20,4 @@ KBN_INSTANCES=${KBN_INSTANCES:-1}
 # shellcheck source=generate-kbn-instances.sh
 source "$(dirname "${BASH_SOURCE[0]}")/generate-kbn-instances.sh"
 
-unset _ENVIROMENT_DIR
+unset _ENVIRONMENT_DIR

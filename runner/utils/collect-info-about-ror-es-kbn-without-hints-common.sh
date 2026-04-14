@@ -12,13 +12,13 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=API" >> .env
 
         read_ror_es_version
         break
         ;;
       2 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_es_ror_file_path
         break
         ;;
@@ -60,7 +60,7 @@ read_es_ror_file_path () {
   while true; do
     read -p "Enter ES ROR file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "ES_ROR_FILE=$path" >> .env
+      echo "ROR_ES_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."
@@ -81,13 +81,13 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=API" >> .env
 
         read_ror_kbn_version
         break
         ;;
       2 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_kbn_ror_file_path
         break
         ;;
@@ -129,7 +129,7 @@ read_kbn_ror_file_path () {
   while true; do
     read -p "Enter KBN ROR file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "KBN_ROR_FILE=$path" >> .env
+      echo "ROR_KBN_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."

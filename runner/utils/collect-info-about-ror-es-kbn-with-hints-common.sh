@@ -33,7 +33,7 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=API" >> .env
 
         ES_ROR_VERSIONS_ARR=($(echo "$ROR_API_RESPONSE" | jq .[0] | jq 'to_entries | map(.value)' | jq .[].pluginVersion -cr))
         DEFAULT_ES_ROR_VERSION=$(echo ${ES_ROR_VERSIONS_ARR[0]})
@@ -43,7 +43,7 @@ Your choice: " choice
         break
         ;;
       2 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_es_ror_file_path
         break
         ;;
@@ -112,7 +112,7 @@ read_es_ror_file_path () {
   while true; do
     read -p "Enter ROR Elasticsearch file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "ES_ROR_FILE=$path" >> .env
+      echo "ROR_ES_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."
@@ -148,7 +148,7 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=API" >> .env
 
         KBN_ROR_VERSIONS_ARR=($(echo "$ROR_API_RESPONSE" | jq .[0] | jq 'to_entries | map(.value)' | jq .[].pluginVersion -cr))
         if [[ " ${KBN_ROR_VERSIONS_ARR[@]} " =~ " ${PICKED_ROR_ES_VERSION} " ]]; then
@@ -162,7 +162,7 @@ Your choice: " choice
         break
         ;;
       2 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_kbn_ror_file_path
         break
         ;;
@@ -231,7 +231,7 @@ read_kbn_ror_file_path () {
   while true; do
     read -p "Enter ROR Kibana file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "KBN_ROR_FILE=$path" >> .env
+      echo "ROR_KBN_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."

@@ -88,9 +88,15 @@ echo -e "
 ./utils/boot/collect-info-about-ror-es-kbn.sh
 . ./utils/boot/check_license.sh "$example_arg"
 
-echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
+echo "Starting Elasticsearch and Kibana with installed ReadonlyREST plugins ..."
 
-docker compose up -d --build --wait --remove-orphans --force-recreate
+DOCKER_LOG=$(mktemp)
+if ! docker compose up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1; then
+  cat "$DOCKER_LOG"
+  rm -f "$DOCKER_LOG"
+  exit 1
+fi
+rm -f "$DOCKER_LOG"
 
 docker compose logs -f > ror-cluster.log 2>&1 &
 
@@ -102,5 +108,5 @@ echo -e "
 ***********************************************************************
 "
 
-echo -e "You can access ROR KBN here: https://localhost:15601"
+echo -e "You can access Kibana with ReadonlyREST here: https://localhost:15601"
 open https://localhost:15601

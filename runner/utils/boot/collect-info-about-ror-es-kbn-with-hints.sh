@@ -9,7 +9,7 @@ if [[ "$STATUS_CODE" -eq 200 ]]; then
   ROR_API_RESPONSE=$(cat /tmp/ror-api-response.txt)
   rm /tmp/ror-api-response.txt
 else
-  echo "ROR API Error. Please try again later ..." 
+  echo "ReadonlyREST API Error. Please try again later ..." 
   exit 128
 fi
 

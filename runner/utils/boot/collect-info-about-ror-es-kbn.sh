@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-echo "Preparing Elasticsearch & Kibana with ROR environment ..."
+echo "Preparing Elasticsearch & Kibana with ReadonlyREST environment ..."
 
 if [[ -e ".env" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env"; then
   echo "Found .env - running in non-interactive mode ..."
@@ -36,13 +36,13 @@ if [[ -e ".env" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env"; then
   if [[ "$ROR_ES_PLUGIN_SOURCE" == "LOCAL_FILE" ]]; then
     es_ror_info="FILE: $ROR_ES_FILE"
   else
-    es_ror_info="API: ROR ES $ROR_ES_VERSION"
+    es_ror_info="API: ReadonlyREST ES $ROR_ES_VERSION"
   fi
 
   if [[ "$ROR_KBN_PLUGIN_SOURCE" == "LOCAL_FILE" ]]; then
     kbn_ror_info="FILE: $ROR_KBN_FILE"
   else
-    kbn_ror_info="API: ROR KBN $ROR_KBN_VERSION"
+    kbn_ror_info="API: ReadonlyREST KBN $ROR_KBN_VERSION"
   fi
 
   echo "  Elasticsearch $ES_VERSION ($es_ror_info)"

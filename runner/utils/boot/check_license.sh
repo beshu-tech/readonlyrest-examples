@@ -13,11 +13,11 @@ detect_license_edition() {
   fi
 
   if [ $rc -ne 0 ]; then
-    echo "ERROR: Failed to extract the ROR license edition (exit code: $rc)." >&2
+    echo "ERROR: Failed to extract the ReadonlyREST license edition (exit code: $rc)." >&2
     echo "$output" >&2
     exit $rc
   elif [ -z "$output" ]; then
-    echo "ERROR: Could not determine the ROR license edition (the extract_license_edition helper returned no result)." >&2
+    echo "ERROR: Could not determine the ReadonlyREST license edition (the extract_license_edition helper returned no result)." >&2
     exit 2
   fi
 

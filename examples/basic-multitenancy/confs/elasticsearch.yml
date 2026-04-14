@@ -21,7 +21,7 @@ xpack.security.transport.ssl.certificate_authorities: ca.crt
 xpack.security.transport.ssl.verification_mode: certificate
 xpack.security.transport.ssl.client_authentication: optional
 
-# ROR SSL
+# ReadonlyREST SSL
 #xpack.security.enabled: false
 #http.type: ssl_netty4
 #readonlyrest.ssl.enable: true

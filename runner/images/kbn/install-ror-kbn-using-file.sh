@@ -9,7 +9,7 @@ if [[ -z "$KBN_VERSION" ]]; then
   exit 1
 fi
 
-echo "Installing KBN ROR $ROR_VERSION..."
+echo "Installing KBN ReadonlyREST $ROR_VERSION..."
 if ! greater_than_or_equal "$KBN_VERSION" "7.0.0"; then
   export NODE_OPTIONS="--max-old-space-size=8192" 
 fi
@@ -21,10 +21,10 @@ else
 fi
 
 if greater_than_or_equal "$KBN_VERSION" "8.15.0" ; then
-  echo "Patching KBN $KBN_VERSION (ROR $ROR_VERSION)..."
+  echo "Patching KBN $KBN_VERSION (ReadonlyREST $ROR_VERSION)..."
   /usr/share/kibana/node/glibc-217/bin/node plugins/readonlyrestkbn/ror-tools.js patch --I_UNDERSTAND_AND_ACCEPT_KBN_PATCHING=yes
 elif greater_than_or_equal "$KBN_VERSION" "7.9.0" ; then
-  echo "Patching KBN $KBN_VERSION (ROR $ROR_VERSION)..."
+  echo "Patching KBN $KBN_VERSION (ReadonlyREST $ROR_VERSION)..."
   /usr/share/kibana/node/bin/node plugins/readonlyrestkbn/ror-tools.js patch --I_UNDERSTAND_AND_ACCEPT_KBN_PATCHING=yes
 fi
 

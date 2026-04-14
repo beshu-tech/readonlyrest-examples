@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-echo "Preparing Elasticsearch & Kibana with ROR environment ..."
+echo "Preparing Elasticsearch & Kibana with ReadonlyREST environment ..."
 
 if [[ -e ".env" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env"; then
   echo "Found .env - running in non-interactive mode ..."
@@ -8,22 +8,22 @@ if [[ -e ".env" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env"; then
 
   missing=()
   if [[ -z "${ES_VERSION:-}" ]]; then missing+=("ES_VERSION"); fi
-  if [[ -z "${ES_DOCKERFILE:-}" ]]; then missing+=("ES_DOCKERFILE"); fi
+  if [[ -z "${ROR_ES_PLUGIN_SOURCE:-}" ]]; then missing+=("ROR_ES_PLUGIN_SOURCE"); fi
   if [[ -z "${KBN_VERSION:-}" ]]; then missing+=("KBN_VERSION"); fi
-  if [[ -z "${KBN_DOCKERFILE:-}" ]]; then missing+=("KBN_DOCKERFILE"); fi
+  if [[ -z "${ROR_KBN_PLUGIN_SOURCE:-}" ]]; then missing+=("ROR_KBN_PLUGIN_SOURCE"); fi
 
-  if [[ -n "${ES_DOCKERFILE:-}" ]]; then
-    if [[ "$ES_DOCKERFILE" == *"from-file"* ]]; then
-      if [[ -z "${ES_ROR_FILE:-}" ]]; then missing+=("ES_ROR_FILE"); fi
-    elif [[ "$ES_DOCKERFILE" == *"from-api"* ]]; then
+  if [[ -n "${ROR_ES_PLUGIN_SOURCE:-}" ]]; then
+    if [[ "$ROR_ES_PLUGIN_SOURCE" == "LOCAL_FILE" ]]; then
+      if [[ -z "${ROR_ES_FILE:-}" ]]; then missing+=("ROR_ES_FILE"); fi
+    elif [[ "$ROR_ES_PLUGIN_SOURCE" == "API" ]]; then
       if [[ -z "${ROR_ES_VERSION:-}" ]]; then missing+=("ROR_ES_VERSION"); fi
     fi
   fi
 
-  if [[ -n "${KBN_DOCKERFILE:-}" ]]; then
-    if [[ "$KBN_DOCKERFILE" == *"from-file"* ]]; then
-      if [[ -z "${KBN_ROR_FILE:-}" ]]; then missing+=("KBN_ROR_FILE"); fi
-    elif [[ "$KBN_DOCKERFILE" == *"from-api"* ]]; then
+  if [[ -n "${ROR_KBN_PLUGIN_SOURCE:-}" ]]; then
+    if [[ "$ROR_KBN_PLUGIN_SOURCE" == "LOCAL_FILE" ]]; then
+      if [[ -z "${ROR_KBN_FILE:-}" ]]; then missing+=("ROR_KBN_FILE"); fi
+    elif [[ "$ROR_KBN_PLUGIN_SOURCE" == "API" ]]; then
       if [[ -z "${ROR_KBN_VERSION:-}" ]]; then missing+=("ROR_KBN_VERSION"); fi
     fi
   fi
@@ -33,16 +33,16 @@ if [[ -e ".env" ]] && grep -q '^[A-Z_][A-Z0-9_]*=' ".env"; then
     exit 1
   fi
 
-  if [[ "$ES_DOCKERFILE" == *"from-file"* ]]; then
-    es_ror_info="FILE: $ES_ROR_FILE"
+  if [[ "$ROR_ES_PLUGIN_SOURCE" == "LOCAL_FILE" ]]; then
+    es_ror_info="FILE: $ROR_ES_FILE"
   else
-    es_ror_info="API: ROR ES $ROR_ES_VERSION"
+    es_ror_info="API: ReadonlyREST ES $ROR_ES_VERSION"
   fi
 
-  if [[ "$KBN_DOCKERFILE" == *"from-file"* ]]; then
-    kbn_ror_info="FILE: $KBN_ROR_FILE"
+  if [[ "$ROR_KBN_PLUGIN_SOURCE" == "LOCAL_FILE" ]]; then
+    kbn_ror_info="FILE: $ROR_KBN_FILE"
   else
-    kbn_ror_info="API: ROR KBN $ROR_KBN_VERSION"
+    kbn_ror_info="API: ReadonlyREST KBN $ROR_KBN_VERSION"
   fi
 
   echo "  Elasticsearch $ES_VERSION ($es_ror_info)"

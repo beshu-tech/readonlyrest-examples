@@ -20,6 +20,32 @@ if [[ "$_example_arg" != */* ]]; then
   _example_arg="../examples/$_example_arg"
 fi
 
+if [ ! -d "$_example_arg" ]; then
+  echo "ERROR: Example '${_example_name}' not found."
+  echo ""
+  echo "Available examples:"
+  for _dir in ../examples/*/; do
+    [ -d "$_dir" ] && echo "  - $(basename "$_dir")"
+  done
+  # Suggest close matches (substring)
+  _matches=()
+  for _dir in ../examples/*/; do
+    _name="$(basename "$_dir")"
+    if [[ "$_name" == *"${_example_name}"* || "${_example_name}" == *"$_name"* ]]; then
+      _matches+=("$_name")
+    fi
+  done
+  if [ ${#_matches[@]} -gt 0 ]; then
+    echo ""
+    echo "Did you mean:"
+    for _m in "${_matches[@]}"; do
+      echo "  $0 $_m"
+    done
+  fi
+  unset _dir _name _matches _m
+  exit 1
+fi
+
 export EXAMPLE_DIR
 EXAMPLE_DIR="$(cd "$_example_arg" && pwd)"
 

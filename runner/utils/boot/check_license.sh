@@ -6,18 +6,18 @@
 
 detect_license_edition() {
   local output rc
-  if output="$(./utils/extract_license_edition.sh "${ROR_ACTIVATION_KEY}" 2>&1)"; then
+  if output="$(./utils/boot/extract_license_edition.sh "${ROR_ACTIVATION_KEY}" 2>&1)"; then
     rc=0
   else
     rc=$?
   fi
 
   if [ $rc -ne 0 ]; then
-    echo "ERROR: Failed to extract the ROR license edition (exit code: $rc)." >&2
+    echo "ERROR: Failed to extract the ReadonlyREST license edition (exit code: $rc)." >&2
     echo "$output" >&2
     exit $rc
   elif [ -z "$output" ]; then
-    echo "ERROR: Could not determine the ROR license edition (the extract_license_edition helper returned no result)." >&2
+    echo "ERROR: Could not determine the ReadonlyREST license edition (the extract_license_edition helper returned no result)." >&2
     exit 2
   fi
 
@@ -38,7 +38,10 @@ check_min_license_edition() {
   local example_arg="$1"
   local min_edition current_rank required_rank
   min_edition=$(grep -E '^ROR_MIN_LICENSE_EDITION=' "${EXAMPLE_DIR}/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
-  [ -n "$min_edition" ] || return 0
+  if [ -z "$min_edition" ]; then
+    echo "ERROR: ROR_MIN_LICENSE_EDITION is not set in ${EXAMPLE_DIR}/.env. Set it to FREE, PRO, or ENT." >&2
+    exit 1
+  fi
 
   current_rank=$(edition_rank "$ROR_LICENSE_EDITION")
   required_rank=$(edition_rank "$min_edition")

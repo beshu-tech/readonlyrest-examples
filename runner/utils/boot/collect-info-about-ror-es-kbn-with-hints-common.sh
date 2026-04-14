@@ -21,7 +21,7 @@ determine_ror_es_dockerfile () {
   DEFAULT_CHOICE=1
 
   while true; do
-    read -p "Use ES ROR (default $DEFAULT_CHOICE):
+    read -p "Use ReadonlyREST ES (default $DEFAULT_CHOICE):
 1. From API
 2. From FILE
 
@@ -33,7 +33,7 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=API" >> .env
 
         ES_ROR_VERSIONS_ARR=($(echo "$ROR_API_RESPONSE" | jq .[0] | jq 'to_entries | map(.value)' | jq .[].pluginVersion -cr))
         DEFAULT_ES_ROR_VERSION=$(echo ${ES_ROR_VERSIONS_ARR[0]})
@@ -43,7 +43,7 @@ Your choice: " choice
         break
         ;;
       2 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_es_ror_file_path
         break
         ;;
@@ -83,7 +83,7 @@ read_ror_es_version () {
   PICKED_ES_VERSION=$4
 
   while true; do
-    read -p "Enter ROR Elasticsearch version (default: $DEFAULT_ES_ROR_VERSION): " rorVersion
+    read -p "Enter ReadonlyREST Elasticsearch version (default: $DEFAULT_ES_ROR_VERSION): " rorVersion
     if [ -z "$rorVersion" ]; then
       echo "ROR_ES_VERSION=$DEFAULT_ES_ROR_VERSION" >> .env
       break
@@ -99,10 +99,10 @@ read_ror_es_version () {
         fi
       done
 
-      echo "ROR Elasticsearch $rorVersion is not available for Elasticsearch $PICKED_ES_VERSION. Please try again ..."
+      echo "ReadonlyREST Elasticsearch $rorVersion is not available for Elasticsearch $PICKED_ES_VERSION. Please try again ..."
       continue
     else
-      echo "ROR Elasticsearch $rorVersion is not available. Please try again ..."
+      echo "ReadonlyREST Elasticsearch $rorVersion is not available. Please try again ..."
       continue
     fi
   done
@@ -110,9 +110,9 @@ read_ror_es_version () {
 
 read_es_ror_file_path () {
   while true; do
-    read -p "Enter ROR Elasticsearch file path (it has to be placed in $(dirname "$0")): " path
+    read -p "Enter ReadonlyREST Elasticsearch file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "ES_ROR_FILE=$path" >> .env
+      echo "ROR_ES_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."
@@ -136,7 +136,7 @@ determine_ror_kbn_dockerfile () {
   DEFAULT_CHOICE=1
 
   while true; do
-    read -p "Use KBN ROR (default $DEFAULT_CHOICE):
+    read -p "Use ReadonlyREST KBN (default $DEFAULT_CHOICE):
  1. From API
  2. From FILE
 
@@ -148,7 +148,7 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=API" >> .env
 
         KBN_ROR_VERSIONS_ARR=($(echo "$ROR_API_RESPONSE" | jq .[0] | jq 'to_entries | map(.value)' | jq .[].pluginVersion -cr))
         if [[ " ${KBN_ROR_VERSIONS_ARR[@]} " =~ " ${PICKED_ROR_ES_VERSION} " ]]; then
@@ -162,7 +162,7 @@ Your choice: " choice
         break
         ;;
       2 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_kbn_ror_file_path
         break
         ;;
@@ -202,7 +202,7 @@ read_ror_kbn_version () {
   PICKED_KBN_VERSION=$4
 
   while true; do
-    read -p "Enter ROR Kibana version (default: $DEFAULT_KBN_ROR_VERSION): " rorVersion
+    read -p "Enter ReadonlyREST Kibana version (default: $DEFAULT_KBN_ROR_VERSION): " rorVersion
     if [ -z "$rorVersion" ]; then
       echo "ROR_KBN_VERSION=$DEFAULT_KBN_ROR_VERSION" >> .env
       break
@@ -218,10 +218,10 @@ read_ror_kbn_version () {
         fi
       done
 
-      echo "ROR Kibana $rorVersion is not available for Kibana $PICKED_KBN_VERSION. Please try again ..."
+      echo "ReadonlyREST Kibana $rorVersion is not available for Kibana $PICKED_KBN_VERSION. Please try again ..."
       continue
     else
-      echo "ROR Kibana $rorVersion is not available. Please try again ..."
+      echo "ReadonlyREST Kibana $rorVersion is not available. Please try again ..."
       continue
     fi
   done
@@ -229,9 +229,9 @@ read_ror_kbn_version () {
 
 read_kbn_ror_file_path () {
   while true; do
-    read -p "Enter ROR Kibana file path (it has to be placed in $(dirname "$0")): " path
+    read -p "Enter ReadonlyREST Kibana file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "KBN_ROR_FILE=$path" >> .env
+      echo "ROR_KBN_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."

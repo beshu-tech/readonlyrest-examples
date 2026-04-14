@@ -3,11 +3,11 @@ services:
   es-ror:
     build:
       context: .
-      dockerfile: images/es/${ES_DOCKERFILE:-ES_DOCKERFILE_NOT_CONFIGURED}
+      dockerfile: images/es/Dockerfile-${ROR_ES_PLUGIN_SOURCE:-ROR_ES_PLUGIN_SOURCE_NOT_CONFIGURED}
       args:
         ES_VERSION: ${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
         ROR_VERSION: ${ROR_ES_VERSION:-ROR_ES_VERSION_NOT_CONFIGURED}
-        ROR_FILE: ${ES_ROR_FILE:-ES_ROR_FILE_NOT_CONFIGURED}
+        ROR_FILE: ${ROR_ES_FILE:-ROR_ES_FILE_NOT_CONFIGURED}
     ports:
       - "19200:9200"
       - "19300:9300"
@@ -59,4 +59,3 @@ services:
 networks:
   ror-network:
     driver: bridge
- 

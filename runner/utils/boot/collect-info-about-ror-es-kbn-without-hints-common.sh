@@ -4,7 +4,7 @@ determine_ror_es_dockerfile () {
   read_es_version
 
   while true; do
-    read -p "Use ES ROR:
+    read -p "Use ReadonlyREST ES:
 1. From API
 2. From FILE
 
@@ -12,13 +12,13 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=API" >> .env
 
         read_ror_es_version
         break
         ;;
       2 )
-        echo "ES_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_ES_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_es_ror_file_path
         break
         ;;
@@ -45,9 +45,9 @@ read_es_version () {
 
 read_ror_es_version () {
   while true; do
-    read -p "Enter ES ROR version: " rorVersion
+    read -p "Enter ReadonlyREST ES version: " rorVersion
     if [ -z "$rorVersion" ]; then
-      echo "Empty ES ROR version. Please try again ..."
+      echo "Empty ReadonlyREST ES version. Please try again ..."
       continue
     fi
 
@@ -58,9 +58,9 @@ read_ror_es_version () {
 
 read_es_ror_file_path () {
   while true; do
-    read -p "Enter ES ROR file path (it has to be placed in $(dirname "$0")): " path
+    read -p "Enter ReadonlyREST ES file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "ES_ROR_FILE=$path" >> .env
+      echo "ROR_ES_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."
@@ -73,7 +73,7 @@ determine_ror_kbn_dockerfile () {
   read_kbn_version
 
   while true; do
-    read -p "Use KBN ROR:
+    read -p "Use ReadonlyREST KBN:
  1. From API
  2. From FILE
 
@@ -81,13 +81,13 @@ Your choice: " choice
 
     case "$choice" in
       1 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-api" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=API" >> .env
 
         read_ror_kbn_version
         break
         ;;
       2 )
-        echo "KBN_DOCKERFILE=Dockerfile-use-ror-binaries-from-file" >> .env
+        echo "ROR_KBN_PLUGIN_SOURCE=LOCAL_FILE" >> .env
         read_kbn_ror_file_path
         break
         ;;
@@ -114,9 +114,9 @@ read_kbn_version () {
 
 read_ror_kbn_version () {
   while true; do
-    read -p "Enter ROR Kibana version: " rorVersion
+    read -p "Enter ReadonlyREST Kibana version: " rorVersion
     if [ -z "$rorVersion" ]; then
-      echo "Empty ROR Kibana version. Please try again ..."
+      echo "Empty ReadonlyREST Kibana version. Please try again ..."
       continue
     fi
 
@@ -127,9 +127,9 @@ read_ror_kbn_version () {
 
 read_kbn_ror_file_path () {
   while true; do
-    read -p "Enter KBN ROR file path (it has to be placed in $(dirname "$0")): " path
+    read -p "Enter ReadonlyREST KBN file path (it has to be placed in $(dirname "$0")): " path
     if [ -f "$path" ]; then
-      echo "KBN_ROR_FILE=$path" >> .env
+      echo "ROR_KBN_FILE=$path" >> .env
       break
     else
       echo "Cannot find file $path. Please try again ..."

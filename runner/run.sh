@@ -31,12 +31,19 @@ echo -e "
                                          __/ |
 "
 
-./utils/collect-info-about-ror-es-kbn.sh
-. ./utils/check_license.sh "$(basename "$EXAMPLE_DIR")"
+./utils/boot/print-example-info.sh "$EXAMPLE_DIR"
+./utils/boot/collect-info-about-ror-es-kbn.sh
+. ./utils/boot/check_license.sh "$(basename "$EXAMPLE_DIR")"
 
-echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
+echo "Starting Elasticsearch and Kibana with installed ReadonlyREST plugins ..."
 
-docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate
+DOCKER_LOG=$(mktemp)
+if ! docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1; then
+  cat "$DOCKER_LOG"
+  rm -f "$DOCKER_LOG"
+  exit 1
+fi
+rm -f "$DOCKER_LOG"
 
 docker compose "${COMPOSE_FILES[@]}" logs -f > ror-cluster.log 2>&1 &
 

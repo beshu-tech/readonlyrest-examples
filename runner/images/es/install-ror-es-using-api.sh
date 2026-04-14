@@ -17,10 +17,10 @@ if [[ ! -v ROR_VERSION || -z "$ROR_VERSION" ]]; then
   exit 2
 fi
 
-echo "Installing ES ROR $ROR_VERSION..."
+echo "Installing ES ReadonlyREST $ROR_VERSION..."
 /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch "https://api.beshu.tech/download/es?esVersion=$ES_VERSION&pluginVersion=$ROR_VERSION&email=ror-sandbox%40readonlyrest.com"
 
-echo "Patching ES ROR $ROR_VERSION..."
+echo "Patching ES ReadonlyREST $ROR_VERSION..."
 
 # Set Java path based on ES version
 if greater_than_or_equal "$ES_VERSION" "7.0.0"; then
@@ -32,7 +32,7 @@ else
   exit 1
 fi
 
-# Set OPTIONS based on ROR version
+# Set OPTIONS based on ReadonlyREST version
 if greater_than_or_equal "$ROR_VERSION" "1.64.0"; then
   OPTIONS="--I_UNDERSTAND_AND_ACCEPT_ES_PATCHING=yes"
 else

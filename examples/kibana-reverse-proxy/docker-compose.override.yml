@@ -19,3 +19,4 @@ services:
       - "8082:80"
       - "8443:443"
     entrypoint: ["sh", "/usr/local/bin/reverse-proxy-entrypoint.sh"]
+

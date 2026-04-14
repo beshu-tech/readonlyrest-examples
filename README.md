@@ -46,7 +46,7 @@ runner/                    # Shared Docker infrastructure (used by all examples)
 
 ## How it works
 
-`run.sh <example>` validates the example directory, copies its `.env` (if present) into the environment, detects the ROR license edition, and launches the cluster via `docker compose`. Config files from the example's `confs/` directory are volume-mounted into the containers at runtime.
+`run.sh <example>` validates the example directory, copies its `.env` (if present) into the environment, detects the ROR license edition, and launches the cluster via `docker compose`. Config files from the example's `confs/` directory are volume-mounted into the containers at runtime. The example's `README.md` title and first paragraph are printed at startup to identify what is being run.
 
 If no `.env` is provided, the script falls back to interactive prompts to collect ES/KBN version info.
 
@@ -57,6 +57,7 @@ If no `.env` is provided, the script falls back to interactive prompts to collec
    - `confs/elasticsearch.yml`
    - `confs/readonlyrest.yml`
    - `confs/kibana.yml`
-3. Optionally add a `.env` to pin ES/KBN/ROR versions (see `examples/basic/.env` for the format)
-4. Optionally add `init/init.sh` to seed data after the cluster starts (it can `source /usr/local/lib/ror-utils.sh` for helper functions like `createIndex`, `putDocument`, etc.)
-5. Run it: `./run.sh my-example`
+3. Add a `README.md` with a title (`# My Example`) and a short description paragraph — these are printed at startup
+4. Optionally add a `.env` to pin ES/KBN/ROR versions (see `examples/basic/.env` for the format)
+5. Optionally add `init/init.sh` to seed data after the cluster starts (it can `source /usr/local/lib/ror-utils.sh` for helper functions like `createIndex`, `putDocument`, etc.)
+6. Run it: `./run.sh my-example`

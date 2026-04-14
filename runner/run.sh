@@ -84,6 +84,7 @@ echo -e "
                                          __/ |
 "
 
+./utils/print-example-info.sh "$example_arg"
 ./utils/collect-info-about-ror-es-kbn.sh
 . ./utils/check_license.sh "$example_arg"
 

@@ -9,7 +9,7 @@ if [ -f "${EXAMPLE_DIR}/.env" ]; then
   set +a
 fi
 
-_ENVIRONMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_ENVIRONMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILES=(-f "${_ENVIRONMENT_DIR}/docker-compose.yml")
 
 if [ -f "${EXAMPLE_DIR}/docker-compose.override.yml" ]; then

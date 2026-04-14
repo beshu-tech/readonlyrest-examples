@@ -8,7 +8,7 @@ if [ -z "${1:-}" ] && [ ! -f .current-example ]; then
   exit 0
 fi
 
-# shellcheck source=utils/resolve-example-dir.sh
-source "$(dirname "$0")/utils/resolve-example-dir.sh" "${1:-}"
+# shellcheck source=utils/boot/resolve-example-dir.sh
+source "$(dirname "$0")/utils/boot/resolve-example-dir.sh" "${1:-}"
 
 docker compose "${COMPOSE_FILES[@]}" rm --stop --force

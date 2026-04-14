@@ -6,7 +6,7 @@
 _GENERATED_INSTANCES_FILE="$(mktemp "${TMPDIR:-/tmp}/ror-kbn-instances-XXXXXX")" || return 1
 echo "services:" > "$_GENERATED_INSTANCES_FILE"
 
-_ENVIRONMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_ENVIRONMENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 _KIBANA_YML="${EXAMPLE_DIR}/confs/kibana.yml"
 _KIBANA_EXTRA="${EXAMPLE_DIR}/scripts/kibana-conf-extra-settings.sh"
 

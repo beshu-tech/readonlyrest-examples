@@ -2,8 +2,8 @@
 
 cd "$(dirname "$0")" || exit 1
 
-# shellcheck source=utils/prepare-example.sh
-source "$(dirname "$0")/utils/prepare-example.sh" "${1:-}"
+# shellcheck source=utils/boot/prepare-example.sh
+source "$(dirname "$0")/utils/boot/prepare-example.sh" "${1:-}"
 
 if ! docker version &>/dev/null; then
   echo "No Docker found. Docker is required to run this Sandbox. See https://docs.docker.com/engine/install/"

@@ -12,5 +12,55 @@ server.ssl.certificate: /usr/share/kibana/config/kibana.crt
 server.ssl.key: /usr/share/kibana/config/kibana.key
 server.ssl.redirectHttpFromPort: 80
 
-readonlyrest_kbn.logLevel: info
-readonlyrest_kbn.cookiePass: '12312313123213123213123abcdefghijklm'
+xpack.encryptedSavedObjects.encryptionKey: "min-32-byte-long-strong-encryption-key"
+
+readonlyrest_kbn:
+  logLevel: info
+  cookiePass: '12312313123213123213123abcdefghijklm'
+  auth:
+    signature_key: "9yzBfnLaTYLfGPzyKW9es76RKYhUVgmuv6ZtehaScj5msGpBpa5FWpwk295uJYaaffTFnQC5tsknh2AguVDaTrqCLfM5zCTqdE4UGNL73h28Bg4dPrvTAFQyygQqv4xfgnevBED6VZYdfjXAQLc8J8ywaHQQSmprZqYCWGE6sM3vzNUEWWB3kmGrEKa4sGbXhmXZCvL6NDnEJhXPDJAzu9BMQxn8CzVLqrx6BxDgPYF8gZCxtyxMckXwCaYXrxAGbjkYH69F4wYhuAdHSWgRAQCuWwYmWCA6g39j4VPge5pv962XYvxwJpvn23Y5KvNZ5S5c6crdG4f4gTCXnU36x92fKMQzsQV9K4phcuNvMWkpqVB6xMA5aPzUeHcGytD93dG8D52P5BxsgaJJE6QqDrk3Y2vyLw9ZEbJhPRJxbuBKVCBtVx26Ldd46dq5eyyzmNEyQGLrjQ4qd978VtG8TNT5rkn4ETJQEju5HfCBbjm3urGLFVqxhGVawecT4YM9Rry4EqXWkRJGTFQWQRnweUFbKNbVTC9NxcXEp6K5rSPEy9trb5UYLYhhMJ9fWSBMuenGRjNSJxeurMRCaxPpNppBLFnp8qW5ezfHgCBpEjkSNNzP4uXMZFAXmdUfJ8XQdPTWuYfdHYc5TZWnzrdq9wcfFQRDpDB2zX5Myu96krDt9vA7wNKfYwkSczA6qUQV66jA8nV4Cs38cDAKVBXnxz22ddAVrPv8ajpu7hgBtULMURjvLt94Nc5FDKw79CTTQxffWEj9BJCDCpQnTufmT8xenywwVJvtj49yv2MP2mGECrVDRmcGUAYBKR8G6ZnFAYDVC9UhY46FGWDcyVX3HKwgtHeb45Ww7dsW8JdMnZYctaEU585GZmqTJp2LcAWRcQPH25JewnPX8pjzVpJNcy7avfA2bcU86bfASvQBDUCrhjgRmK2ECR6vzPwTsYKRgFrDqb62FeMdrKgJ9vKs435T5ACN7MNtdRXHQ4fj5pNpUMDW26Wd7tt9bkBTqEGf"
+    saml_keycloak:
+      buttonName: 'Keycloak SAML'
+      enabled: true
+      type: 'saml'
+      issuer: 'ror-saml'
+      entryPoint: 'http://kc.localhost:8080/realms/ror/protocol/saml'
+      kibanaExternalHost: 'localhost:8443'
+      protocol: 'https'
+      usernameParameter: 'nameID'
+      groupsParameter: 'memberOf'
+      logoutUrl: 'http://kc.localhost:8080/realms/ror/protocol/saml'
+      YOU_SHOULD_READ_ME_IN_STRATEGY_CONFIGURATION_LOG: 'unknown conf params should be passed unmodified to the underlying passport-saml library'
+      cert: 'MIICrDCCAZQCCQDN5Tcc+Rn6rTANBgkqhkiG9w0BAQsFADAYMRYwFAYDVQQDDA1rZXljbG9hay1zYW1sMB4XDTI1MTExMDA0MjQyOFoXDTM1MTEwODA0MjQyOFowGDEWMBQGA1UEAwwNa2V5Y2xvYWstc2FtbDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJv0EFcTjNkpn5kV/XedCJ/AQKsPafZ7u33u3zfYgZbTh0V+CJ4bUAZyTfvGrcxR/iZy3hkYQBL7DGM6c/fYJGq1IH+/jxAk/GBY9tVnxotRsyhIMJYtZCb+DBUVX+wLowv2kZPlf/6OibjVpy+I6klQxIU8aeMkd+M/Phl97l+pRUjTuQZvEaEtkVLcsG6gEUcNo2X0MpNFwT7UgpGZLGy8zSHGNu703tb8w0oCYTEj42WqLWYNm5NMqD/clbPRj8g+1qZHpSoIH+p/cqVfU+oAZd3R2Y8SGR2OhYwyu9wHRnuqgiEgCIYbzwyh3IzX+57R8MQxHnjBFnzJKFtBWHMCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAUGrj7hEEHJvm58RYTjqhcJ38MVkgEmAnGovObxvS9Xi6ZBct4irWdpyESowRJtY4nxFGs0uiArOpQDkteSeDzJs/IkSg3xTx3UwOpevf8IV5gU8Bwq68Fyh9An8NvczE5XhLZD1Tacphlz5OzoXthMsS1pcCumr5ZELwMtvLYAWkEV/cKmlis4JuMEZXc5v9KVybsmHv1hgM+fxg1neuWrPK1JebuVm4oaHUHYKCxqn9MXjnDvOq6MkYtKBfcYf6BKk29lapYuHNiRTi0hMPD1tWVaZg3H1/uMxlLXDxAZqkS4DNq/7MeIMUWemOqxQHZAi4rtplrVl/F3WES6pqWw=='
+    oidc_keycloak:
+      buttonName: "Keycloak OIDC"
+      type: "oidc"
+      protocol: "https"
+      issuer: 'http://kc.localhost:8080/realms/ror'
+      authorizationURL: 'http://kc.localhost:8080/realms/ror/protocol/openid-connect/auth'
+      tokenURL: 'http://kc.localhost:8080/realms/ror/protocol/openid-connect/token'
+      userInfoURL: 'http://kc.localhost:8080/realms/ror/protocol/openid-connect/userinfo'
+      jwksURL: 'http://kc.localhost:8080/realms/ror/protocol/openid-connect/certs'
+      clientID: 'ror-oidc'
+      clientSecret: 'kibanasecret123'
+      scope: 'openid profile email'
+      usernameParameter: 'preferred_username'
+      groupsParameter: 'groups'
+      kibanaExternalHost: 'localhost:8443'
+      logoutUrl: 'http://kc.localhost:8080/realms/ror/protocol/openid-connect/logout'
+    oidc_lemon_ldap:
+      buttonName: "LemonLDAP OpenID"
+      type: "oidc"
+      protocol: "https"
+      issuer: 'https://oidctest.wsweet.org/'
+      authorizationURL: 'https://oidctest.wsweet.org/oauth2/authorize'
+      tokenURL: 'https://oidctest.wsweet.org/oauth2/token'
+      userInfoURL: 'https://oidctest.wsweet.org/oauth2/userinfo'
+      clientID: 'private'
+      clientSecret: 'tardis'
+      scope: 'openid users roles'
+      usernameParameter: 'sub'
+      groupsParameter: 'roles'
+      kibanaExternalHost: 'localhost:8443'
+      logoutUrl: 'https://oidctest.wsweet.org/oauth2/logout'
+      jwksURL: 'https://oidctest.wsweet.org/oauth2/jwks'

@@ -30,11 +30,28 @@ Key characteristics:
 
 ## Users
 
-| Username | Password | Role                     | Kibana access | Visible indices                                   |
-|----------|----------|--------------------------|---------------|---------------------------------------------------|
-| `admin`  | `admin`  | Administrator            | Full admin    | All                                               |
+### Local users
+
+| Username | Password | Tenancy                  | Kibana access | Visible indices                                        |
+|----------|----------|--------------------------|---------------|--------------------------------------------------------|
+| `admin`  | `admin`  | Administrator            | Full admin    | All                                                    |
 | `user1`  | `test`   | End User + Business User | Read/Write    | `*-frontend-*`, `*-business-*`, `kibana_sample_data_*` |
-| `user2`  | `test`   | End User                 | Read/Write    | `*-frontend-*`, `kibana_sample_data_*`            |
+| `user2`  | `test`   | End User                 | Read/Write    | `*-frontend-*`, `kibana_sample_data_*`                 |
+
+### Keycloak users (SAML/OIDC)
+
+| Username   | Password   | Keycloak groups                   | Tenancy                  | Kibana access          | Visible indices                                        |
+|------------|------------|-----------------------------------|--------------------------|------------------------|--------------------------------------------------------|
+| `extUser1` | `extUser1` | `extEndUsers`, `extBusinessUsers` | End User + Business User | Read/Write + Read-only | `*-frontend-*`, `*-business-*`, `kibana_sample_data_*` |
+| `extUser2` | `extUser2` | `extEndUsers`                     | End User                 | Read/Write             | `*-frontend-*`, `kibana_sample_data_*`                 |
+
+### LemonLDAP users (OpenId)
+
+| Username | Password | LDAP group | Tenancy  | Kibana access | Visible indices                        |
+|----------|----------|------------|----------|---------------|----------------------------------------|
+| `dwho`   | `dwho`   | `users`    | End User | Read/Write    | `*-frontend-*`, `kibana_sample_data_*` |
+| `rtyler` | `rtyler` | `users`    | End User | Read/Write    | `*-frontend-*`, `kibana_sample_data_*` |
+| `msmith` | `msmith` | `users`    | End User | Read/Write    | `*-frontend-*`, `kibana_sample_data_*` |
 
 ## How to run
 

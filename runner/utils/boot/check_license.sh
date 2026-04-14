@@ -6,7 +6,7 @@
 
 detect_license_edition() {
   local output rc
-  if output="$(./utils/extract_license_edition.sh "${ROR_ACTIVATION_KEY}" 2>&1)"; then
+  if output="$(./utils/boot/extract_license_edition.sh "${ROR_ACTIVATION_KEY}" 2>&1)"; then
     rc=0
   else
     rc=$?

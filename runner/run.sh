@@ -84,9 +84,9 @@ echo -e "
                                          __/ |
 "
 
-./utils/print-example-info.sh "$example_arg"
-./utils/collect-info-about-ror-es-kbn.sh
-. ./utils/check_license.sh "$example_arg"
+./utils/boot/print-example-info.sh "$example_arg"
+./utils/boot/collect-info-about-ror-es-kbn.sh
+. ./utils/boot/check_license.sh "$example_arg"
 
 echo "Starting Elasticsearch and Kibana with installed ROR plugins ..."
 

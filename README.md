@@ -10,7 +10,7 @@ Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticse
 
 ```bash
 export ROR_ACTIVATION_KEY="your-key-here"
-./run.sh basic
+./run.sh basic-multitenancy
 ```
 
 To stop and clean up:

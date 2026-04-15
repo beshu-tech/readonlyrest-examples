@@ -1,0 +1,33 @@
+server.name: ${SERVER_NAME}
+server.host: 0.0.0.0
+server.publicBaseUrl: "https://kbn-ror:5601"
+
+elasticsearch.username: kibana
+elasticsearch.password: kibana
+elasticsearch.ssl.verificationMode: none
+
+server.ssl.enabled: true
+server.ssl.certificate: /usr/share/kibana/config/kibana.crt
+server.ssl.key: /usr/share/kibana/config/kibana.key
+server.ssl.redirectHttpFromPort: 80
+
+xpack.encryptedSavedObjects.encryptionKey: "min-32-byte-long-strong-encryption-key"
+
+xpack.fleet.agents.kibana.host: "https://kbn-ror:5601"
+xpack.fleet.packages:
+  - name: fleet_server
+    version: latest
+  - name: system
+    version: latest
+xpack.fleet.agentPolicies:
+  - name: Fleet-Server-Policy
+    id: fleet-server-policy
+    namespace: default
+    monitoring_enabled: []
+    package_policies:
+      - name: fleet_server-1
+        package:
+          name: fleet_server
+
+readonlyrest_kbn.logLevel: info
+readonlyrest_kbn.cookiePass: '12312313123213123213123abcdefghijklm'

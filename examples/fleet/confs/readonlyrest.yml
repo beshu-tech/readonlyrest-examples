@@ -1,0 +1,75 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+
+    - name: "Fleet server"
+      type: allow
+      token_authentication:
+        type: "service-token"
+        username: "fleet"
+      indices: [".fleet-servers", ".fleet-agents", ".fleet-actions", ".fleet-policies", ".fleet-policies-leader", ".fleet-enrollment-api-keys"]
+
+    - name: "Agents"
+      type: allow
+      token_authentication:
+        type: "api-key"
+        username: "fleet"
+      indices: [".apm-agent-configuration", "metrics-*", "traces-*", "logs-*"]
+
+    - name: "Forbid access to service accounts and api keys"
+      type: forbid
+      actions: ["cluster:admin/xpack/security/service_account/*", "cluster:admin/xpack/security/api_key/*"]
+
+    - name: "Admins"
+      groups: [Administrators]
+      kibana:
+        access: admin
+
+    - name: "End users"
+      groups: ["EndUsers"]
+      indices: ["frontend_logs", "kibana_sample_data_*"]
+      kibana:
+        index: .kibana_end_@{user}
+        access: rw
+        hide_apps: ["Security", "Observability"]
+
+    - name: "Business users"
+      groups: ["BusinessUsers"]
+      indices: ["business_logs", "kibana_sample_data_*"]
+      kibana:
+        index: .kibana_business_@{user}
+        access: rw
+        hide_apps: ["Security", "Observability"]
+
+  users:
+    - username: admin
+      auth_key: admin:admin
+      groups:
+        - id: "Administrators"
+          name: "Administrators"
+        - id: "EndUsers"
+          name: "End Users"
+        - id: "BusinessUsers"
+          name: "Business Users"
+
+    - username: user1
+      auth_key: user1:test
+      groups:
+        - id: "EndUsers"
+          name: "End Users"
+        - id: "BusinessUsers"
+          name: "Business Users"
+
+    - username: user2
+      auth_key: user2:test
+      groups:
+        - id: "EndUsers"
+          name: "End Users"

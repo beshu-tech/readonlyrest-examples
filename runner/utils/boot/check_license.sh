@@ -54,7 +54,7 @@ check_min_license_edition() {
     echo "" >&2
     echo "  Once you have the key, set it before running the example:" >&2
     echo "  export ROR_ACTIVATION_KEY=<your-activation-key>" >&2
-    echo "  ./run.sh $example_arg" >&2
+    echo "  ./run.sh $(basename "$example_arg")" >&2
     exit 1
   fi
 }

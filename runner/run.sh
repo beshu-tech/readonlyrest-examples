@@ -2,6 +2,11 @@
 
 cd "$(dirname "$0")" || exit 1
 
+if [ -z "${1:-}" ]; then
+  selected=$(./utils/boot/select-example.sh ../examples) || exit 1
+  set -- "$selected"
+fi
+
 # shellcheck source=utils/boot/prepare-example.sh
 source "$(dirname "$0")/utils/boot/prepare-example.sh" "${1:-}"
 

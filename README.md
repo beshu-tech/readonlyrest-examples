@@ -8,6 +8,15 @@ Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticse
 
 ## Quick start
 
+Run without arguments to interactively select an example:
+
+```bash
+export ROR_ACTIVATION_KEY="your-key-here"
+./run.sh
+```
+
+Or pass the example name directly:
+
 ```bash
 export ROR_ACTIVATION_KEY="your-key-here"
 ./run.sh basic-multitenancy

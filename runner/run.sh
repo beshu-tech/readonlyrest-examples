@@ -3,9 +3,8 @@
 cd "$(dirname "$0")" || exit 1
 
 if [ -z "${1:-}" ]; then
-  echo "Usage: $0 <example-name>"
-  echo "Example: $0 basic"
-  exit 1
+  selected=$(./utils/boot/select-example.sh ../examples) || exit 1
+  set -- "$selected"
 fi
 
 example_arg="$1"

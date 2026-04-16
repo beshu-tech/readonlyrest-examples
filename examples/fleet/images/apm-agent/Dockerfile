@@ -4,9 +4,13 @@ FROM docker.elastic.co/elastic-agent/elastic-agent:${ES_VERSION}
 
 USER root
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl jq && \
-    rm -rf /var/lib/apt/lists/*
+RUN if command -v apt-get > /dev/null; then \
+      apt-get update && apt-get install -y --no-install-recommends curl jq && rm -rf /var/lib/apt/lists/*; \
+    elif command -v microdnf > /dev/null; then \
+      microdnf install -y jq && microdnf clean all; \
+    else \
+      dnf install -y jq && dnf clean all; \
+    fi
 
 COPY entrypoint.sh /entrypoint.sh
 

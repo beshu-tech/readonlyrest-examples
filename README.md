@@ -40,7 +40,7 @@ To stop and clean up:
 
 ```
 examples/                  # One directory per example
-  basic/
+  basic-multitenancy/
     .env                   # ES/KBN/ReadonlyREST versions and Dockerfile choice (optional)
     confs/                 # elasticsearch.yml, kibana.yml, readonlyrest.yml
     scripts/               # Lifecycle scripts: init.sh (data seeding), post-start.sh (optional)

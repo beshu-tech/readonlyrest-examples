@@ -4,21 +4,45 @@ Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticse
 ## Prerequisites
 
 - Docker with `docker compose` plugin
-- `ROR_ACTIVATION_KEY` environment variable set with a valid ReadonlyREST activation key
+- A ReadonlyREST activation key (only for examples that require a PRO or ENT license — you will be prompted when needed)
 
 ## Quick start
 
-Run without arguments to interactively select an example:
+Run any example with a single command (no clone needed):
 
 ```bash
-export ROR_ACTIVATION_KEY="your-key-here"
-./run.sh
+bash <(curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh)
 ```
 
 Or pass the example name directly:
 
 ```bash
+bash <(curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh) basic-multitenancy
+```
+
+Some examples require a ReadonlyREST PRO or ENT activation key. If needed, you will be prompted to enter it. You can also set it once as an environment variable:
+
+```bash
 export ROR_ACTIVATION_KEY="your-key-here"
+```
+
+To stop and clean up:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh) --clean
+```
+
+### From a local clone
+
+If you already have the repo cloned:
+
+```bash
+./run.sh
+```
+
+Or with an example name:
+
+```bash
 ./run.sh basic-multitenancy
 ```
 

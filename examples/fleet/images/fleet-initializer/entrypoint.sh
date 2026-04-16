@@ -85,7 +85,7 @@ while true; do
       -s -u "kibana:kibana" --cacert /certs/ca.crt \
       -XPOST -H "kbn-xsrf: kibana" -H "Content-type: application/json" \
       "$KIBANA_URL/api/fleet/package_policies" \
-      -d "{\"name\":\"apm2\",\"namespace\":\"default\",\"policy_id\":\"elastic-policy\",\"package\":{\"name\":\"apm\",\"version\":\"$APM_VERSION\"},\"inputs\":[{\"type\":\"apm\",\"enabled\":true,\"streams\":[],\"policy_template\":\"apmserver\",\"vars\":{\"host\":{\"value\":\"0.0.0.0:8200\",\"type\":\"text\"},\"url\":{\"value\":\"https://apm-agent:8200\",\"type\":\"text\"},\"tls_enabled\":{\"value\":true,\"type\":\"bool\"},\"tls_certificate\":{\"value\":\"/certs/apm-agent.crt\",\"type\":\"text\"},\"tls_key\":{\"value\":\"/certs/apm-agent.key\",\"type\":\"text\"}}}]}"; then
+      -d "{\"name\":\"apm2\",\"namespace\":\"default\",\"policy_id\":\"elastic-policy\",\"package\":{\"name\":\"apm\",\"version\":\"$APM_VERSION\"},\"inputs\":[{\"type\":\"apm\",\"enabled\":true,\"streams\":[],\"policy_template\":\"apmserver\",\"vars\":{\"host\":{\"value\":\"0.0.0.0:8200\",\"type\":\"text\"},\"url\":{\"value\":\"https://apm-agent:8200\",\"type\":\"text\"},\"tls_enabled\":{\"value\":true,\"type\":\"bool\"},\"tls_certificate\":{\"value\":\"/certs/apm-agent.crt\",\"type\":\"text\"},\"tls_key\":{\"value\":\"/certs/apm-agent.key\",\"type\":\"text\"},\"tail_sampling_enabled\":{\"value\":false,\"type\":\"bool\"}}}]}"; then
       echo "Failed to create APM package policy, exiting..."
       exit 1
     fi

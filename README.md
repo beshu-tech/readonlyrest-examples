@@ -32,14 +32,14 @@ To stop and clean up:
 
 | Example | Description |
 |---------|-------------|
-| [basic](examples/basic) | Multi-tenancy: isolated Kibana spaces and index access per user |
+| [basic-multitenancy](examples/basic-multitenancy) | Multi-tenancy: isolated Kibana spaces and index access per user |
 | [kibana-reverse-proxy](examples/kibana-reverse-proxy) | Two Kibana nodes behind an Apache HTTPS reverse proxy with sticky-session load balancing, SSL termination, and a configurable base-path rewriting strategy |
 
 ## Project structure
 
 ```
 examples/                  # One directory per example
-  basic/
+  basic-multitenancy/
     .env                   # ES/KBN/ReadonlyREST versions and Dockerfile choice (optional)
     confs/                 # elasticsearch.yml, kibana.yml, readonlyrest.yml
     scripts/               # Lifecycle scripts: init.sh (data seeding), post-start.sh (optional)

@@ -15,9 +15,9 @@ for dir in "$EXAMPLES_DIR"/*/; do
   readme="$dir/README.md"
   if [ -f "$readme" ]; then
     desc=$(sed -n '3p' "$readme")
-    descriptions+=("$name — $desc")
+    descriptions+=("$desc")
   else
-    descriptions+=("$name")
+    descriptions+=("")
   fi
 done
 
@@ -27,20 +27,27 @@ if [ ${#examples[@]} -eq 0 ]; then
 fi
 
 cursor=0
-count=${#descriptions[@]}
+count=${#examples[@]}
 
 render_menu() {
   if [ "${first_render:-1}" -eq 0 ]; then
     printf '\033[%dA' "$count" >&2
   fi
   first_render=0
-  for i in "${!descriptions[@]}"; do
+  for i in "${!examples[@]}"; do
+    printf '\033[2K' >&2
     if [ "$i" -eq "$cursor" ]; then
-      printf '\033[1m\033[7m > %s \033[0m\n' "${descriptions[$i]}" >&2
+      printf '\033[1m\033[7m > %s \033[0m\n' "${examples[$i]}" >&2
     else
-      printf '   %s\n' "${descriptions[$i]}" >&2
+      printf '   %s\n' "${examples[$i]}" >&2
     fi
   done
+  # Clear everything below the list, then print description
+  printf '\033[J' >&2
+  local desc="${descriptions[$cursor]}"
+  if [ -n "$desc" ]; then
+    printf '\n   \033[2m%s\033[0m\n' "$desc" >&2
+  fi
 }
 
 echo "Select an example to run (use arrow keys, press Enter to confirm):" >&2

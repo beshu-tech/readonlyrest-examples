@@ -50,11 +50,22 @@ while true; do
       exit 1
     fi
 
+    echo "=== Detecting package versions ==="
+    SYSTEM_VERSION=$(curl -s -u "kibana:kibana" --cacert /certs/ca.crt \
+      "$KIBANA_URL/api/fleet/epm/packages/system" | jq -r '.item.version')
+
+    if [ -z "$SYSTEM_VERSION" ] || [ "$SYSTEM_VERSION" = "null" ]; then
+      echo "ERROR: Could not detect system package version"
+      exit 1
+    fi
+
+    echo "Detected system package version: $SYSTEM_VERSION"
+
     if ! check_curl "Create System Package Policy" \
       -s -u "kibana:kibana" --cacert /certs/ca.crt \
       -XPOST -H "kbn-xsrf: kibana" -H "Content-type: application/json" \
       "$KIBANA_URL/api/fleet/package_policies" \
-      -d '{"name":"Elastic-System-package","namespace":"default","policy_id":"elastic-policy","package":{"name":"system","version":"1.54.0"}}'; then
+      -d "{\"name\":\"Elastic-System-package\",\"namespace\":\"default\",\"policy_id\":\"elastic-policy\",\"package\":{\"name\":\"system\",\"version\":\"$SYSTEM_VERSION\"}}"; then
       echo "Failed to create system package policy, exiting..."
       exit 1
     fi

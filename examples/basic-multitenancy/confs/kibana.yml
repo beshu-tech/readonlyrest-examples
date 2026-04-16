@@ -1,0 +1,18 @@
+server.name: kibana-ror
+server.host: 0.0.0.0
+
+elasticsearch.username: kibana
+elasticsearch.password: kibana
+elasticsearch.ssl.verificationMode: none
+
+# generated with:
+# $ openssl req -x509 -batch -nodes -days 3650 -newkey rsa:2048 -keyout kibana.key -out kibana.crt
+server.ssl.enabled: true
+server.ssl.certificate: /usr/share/kibana/config/kibana.crt
+server.ssl.key: /usr/share/kibana/config/kibana.key
+server.ssl.redirectHttpFromPort: 80
+
+xpack.encryptedSavedObjects.encryptionKey: "min-32-byte-long-strong-encryption-key"
+
+readonlyrest_kbn.logLevel: info
+readonlyrest_kbn.cookiePass: '12312313123213123213123abcdefghijklm'

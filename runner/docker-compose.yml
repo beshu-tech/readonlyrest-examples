@@ -1,0 +1,92 @@
+services:
+
+  es-ror:
+    build:
+      context: .
+      dockerfile: images/es/Dockerfile-${ROR_ES_PLUGIN_SOURCE:-ROR_ES_PLUGIN_SOURCE_NOT_CONFIGURED}
+      args:
+        ES_VERSION: ${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
+        ROR_VERSION: ${ROR_ES_VERSION:-ROR_ES_VERSION_NOT_CONFIGURED}
+        ROR_FILE: ${ROR_ES_FILE:-ROR_ES_FILE_NOT_CONFIGURED}
+    ports:
+      - "19200:9200"
+      - "19300:9300"
+    environment:
+      - cluster.name=ror-es-cluster
+      - node.name=es-ror-single
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Dcom.readonlyrest.settings.loading.attempts.count=1 -Dcom.readonlyrest.settings.loading.delay=0s -Dcom.readonlyrest.settings.maxSize=10MB"
+      - ES_VERSION=${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fksS --connect-timeout 3 --max-time 5 --retry 2 --retry-connrefused -u admin:admin https://127.0.0.1:9200/_cluster/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    volumes:
+      - ${EXAMPLE_DIR:-./conf/es}/confs/readonlyrest.yml:/usr/share/elasticsearch/config/readonlyrest.yml:ro
+      - ${EXAMPLE_DIR:-./conf/es}/confs/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    networks:
+      - ror-network
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  kbn-ror:
+    build:
+      context: .
+      dockerfile: images/kbn/Dockerfile-${ROR_KBN_PLUGIN_SOURCE:-ROR_KBN_PLUGIN_SOURCE_NOT_CONFIGURED}
+      args:
+        KBN_VERSION: ${KBN_VERSION:-KBN_VERSION_NOT_CONFIGURED}
+        ROR_VERSION: ${ROR_KBN_VERSION:-ROR_KBN_VERSION_NOT_CONFIGURED}
+        ROR_FILE: ${ROR_KBN_FILE:-ROR_KBN_FILE_NOT_CONFIGURED}
+    depends_on:
+      es-ror:
+        condition: service_healthy
+    ports:
+      - "15601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: https://es-ror:9200
+      ROR_ACTIVATION_KEY: $ROR_ACTIVATION_KEY
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fksS --connect-timeout 3 --max-time 5 --retry 2 --retry-connrefused -u admin:admin https://127.0.0.1:5601/api/features >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    volumes:
+      - ${EXAMPLE_DIR:-./conf/kbn}/confs/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    networks:
+      - ror-network
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  initializer:
+    build:
+      context: .
+      dockerfile: images/cluster-initializer/Dockerfile
+    depends_on:
+      es-ror:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_ADDRESS: https://es-ror:9200
+      ELASTICSEARCH_USER: kibana
+      ELASTICSEARCH_PASSWORD: kibana
+    healthcheck:
+      test: "test -f /tmp/init_done || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+    volumes:
+      - ${EXAMPLE_DIR:-./init-scripts}/init:/scripts
+    networks:
+      - ror-network
+
+networks:
+  ror-network:
+    driver: bridge

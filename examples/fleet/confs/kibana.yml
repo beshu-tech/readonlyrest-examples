@@ -1,6 +1,6 @@
 server.name: ${SERVER_NAME}
 server.host: 0.0.0.0
-server.publicBaseUrl: "https://kbn-ror:5601"
+server.publicBaseUrl: "https://localhost:15601"
 
 elasticsearch.username: kibana
 elasticsearch.password: kibana

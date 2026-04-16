@@ -77,6 +77,8 @@ services:
     build:
       context: ${EXAMPLE_DIR}/images/agent1
       dockerfile: Dockerfile
+      args:
+        ES_VERSION: ${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
     hostname: agent1
     restart: always
     user: root

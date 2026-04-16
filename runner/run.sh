@@ -40,10 +40,23 @@ echo -e "
 ./utils/boot/collect-info-about-ror-es-kbn.sh
 . ./utils/boot/check_license.sh "$(basename "$EXAMPLE_DIR")"
 
-echo "Starting Elasticsearch and Kibana with installed ReadonlyREST plugins ..."
+BOOT_MSG="Starting Elasticsearch and Kibana with installed ReadonlyREST plugins"
+printf '%s' "$BOOT_MSG"
 
 DOCKER_LOG=$(mktemp)
-if ! docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1; then
+docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1 &
+DOCKER_PID=$!
+
+DOT_FRAMES=("." ".." "...")
+_dot_i=0
+while kill -0 "$DOCKER_PID" 2>/dev/null; do
+  printf '\r%s%-3s' "$BOOT_MSG" "${DOT_FRAMES[$_dot_i]}"
+  _dot_i=$(( (_dot_i + 1) % 3 ))
+  sleep 0.5
+done
+printf '\n'
+
+if ! wait "$DOCKER_PID"; then
   cat "$DOCKER_LOG"
   rm -f "$DOCKER_LOG"
   exit 1

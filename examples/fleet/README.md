@@ -16,9 +16,9 @@ Runs a full Elastic stack — Elasticsearch and Kibana with ReadonlyREST, a Flee
 │     │              │                                    │
 │     │         fleet-initializer (one-shot)              │
 │     │                                                   │
-│     └──────── agent1 (APM server on :8200)              │
+│     └──────── apm-agent (APM server on :8200)           │
 │                    │                                    │
-│               service1 (Node.js + APM client)           │
+│               demo-app (Node.js + APM client)           │
 │                    │                                    │
 │               traffic-simulator (curl loop)             │
 └─────────────────────────────────────────────────────────┘
@@ -31,7 +31,7 @@ Runs a full Elastic stack — Elasticsearch and Kibana with ReadonlyREST, a Flee
 | Kibana        | 15601     | ReadonlyREST Kibana UI   |
 | Fleet Server  | 8220      | Fleet enrollment endpoint|
 | Agent (APM)   | 8201      | APM server               |
-| service1      | 3001      | Instrumented Node.js app |
+| demo-app      | 3001      | Instrumented Node.js app |
 
 ## Users
 
@@ -44,8 +44,8 @@ Runs a full Elastic stack — Elasticsearch and Kibana with ReadonlyREST, a Flee
 ## What to explore
 
 - **Fleet** → open Kibana as `admin` and navigate to Management → Fleet to see the enrolled agent and its policy
-- **APM** → navigate to Observability → APM to see traces from `service1`
-- **Metrics** → navigate to Observability → Metrics to see system metrics from `agent1`
+- **APM** → navigate to Observability → APM to see traces from `demo-app`
+- **Metrics** → navigate to Observability → Metrics to see system metrics from `apm-agent`
 - **Multi-tenancy** → log in as `user1` or `user2` to see isolated Kibana spaces with restricted index access
 
 ## How to run

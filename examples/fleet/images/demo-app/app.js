@@ -1,6 +1,6 @@
 var apm = require('elastic-apm-node').start({
-  serverUrl: 'https://agent1:8200',
-  serviceName: 'service1',
+  serverUrl: 'https://apm-agent:8200',
+  serviceName: 'demo-app',
   environment: 'ror-fleet-example',
   serverCaCertFile: '/certs/ca.crt',
   logLevel: 'info'

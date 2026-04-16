@@ -73,13 +73,13 @@ services:
     networks:
       - ror-network
 
-  agent1:
+  apm-agent:
     build:
-      context: ${EXAMPLE_DIR}/images/agent1
+      context: ${EXAMPLE_DIR}/images/apm-agent
       dockerfile: Dockerfile
       args:
         ES_VERSION: ${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
-    hostname: agent1
+    hostname: apm-agent
     restart: always
     user: root
     depends_on:
@@ -102,13 +102,13 @@ services:
     networks:
       - ror-network
 
-  service1:
+  demo-app:
     build:
-      context: ${EXAMPLE_DIR}/images/service1
+      context: ${EXAMPLE_DIR}/images/demo-app
       dockerfile: Dockerfile
-    hostname: service1
+    hostname: demo-app
     depends_on:
-      agent1:
+      apm-agent:
         condition: service_started
     ports:
       - "3001:3000"
@@ -125,7 +125,7 @@ services:
       dockerfile: Dockerfile
     hostname: traffic-simulator
     depends_on:
-      service1:
+      demo-app:
         condition: service_started
     networks:
       - ror-network

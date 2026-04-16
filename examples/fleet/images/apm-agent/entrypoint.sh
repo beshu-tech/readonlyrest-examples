@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 POLICY_ID="elastic-policy"
-FLEET_ENROLLMENT_TOKEN=$(curl -k -s \
+FLEET_ENROLLMENT_TOKEN=$(curl -s --cacert /certs/ca.crt \
   -u kibana:kibana \
   https://kbn-ror:5601/api/fleet/enrollment_api_keys | \
   jq -r '.items[] | select(any(.; .policy_id == "'$POLICY_ID'")) | .api_key')

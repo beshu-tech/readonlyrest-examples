@@ -5,7 +5,8 @@ FROM docker.elastic.co/elastic-agent/elastic-agent:${ES_VERSION}
 USER root
 
 RUN apt-get update && \
-    apt-get install -y curl jq
+    apt-get install -y --no-install-recommends curl jq && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /entrypoint.sh
 

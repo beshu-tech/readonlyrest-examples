@@ -1,0 +1,81 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
+    - name: "Admins"
+      groups: [Administrators]
+      kibana:
+        access: admin
+
+    - name: "End users"
+      groups: ["EndUsers"]
+      indices: ["*-frontend-*", "kibana_sample_data_*"]
+      kibana:
+        index: .kibana_end_@{user}
+        access: rw
+        hide_apps: ["Security", "Observability"]
+
+    - name: "Business users"
+      groups: ["BusinessUsers"]
+      indices: ["*-business-*", "kibana_sample_data_*"]
+      kibana:
+        index: .kibana_business_@{user}
+        access: ro
+        hide_apps: ["Security", "Observability"]
+
+  users:
+    - username: admin
+      auth_key: admin:admin
+      groups:
+        - id: "Administrators"
+          name: "Administrators"
+        - id: "EndUsers"
+          name: "End Users"
+        - id: "BusinessUsers"
+          name: "Business Users"
+
+    - username: user1
+      auth_key: user1:test
+      groups:
+        - id: "EndUsers"
+          name: "End Users"
+        - id: "BusinessUsers"
+          name: "Business Users"
+
+    - username: user2
+      auth_key: user2:test
+      groups:
+        - id: "EndUsers"
+          name: "End Users"
+
+    - username: "*"
+      ror_kbn_auth:
+        name: "my_kbn_cluster"
+        groups: ["*"]
+      groups:
+        - local_group:
+            id: "EndUsers"
+            name: "End Users"
+          external_group_ids: [ 
+            "extEndUsers", # role from Keycloak
+            "users" # role from LemonLDAP
+          ]
+        - local_group:
+            id: "BusinessUsers"
+            name: "Business Users"
+          external_group_ids: [ 
+            "extBusinessUsers" # role from Keycloak
+          ]
+
+  ror_kbn:
+    - name: my_kbn_cluster
+      signature_key: "9yzBfnLaTYLfGPzyKW9es76RKYhUVgmuv6ZtehaScj5msGpBpa5FWpwk295uJYaaffTFnQC5tsknh2AguVDaTrqCLfM5zCTqdE4UGNL73h28Bg4dPrvTAFQyygQqv4xfgnevBED6VZYdfjXAQLc8J8ywaHQQSmprZqYCWGE6sM3vzNUEWWB3kmGrEKa4sGbXhmXZCvL6NDnEJhXPDJAzu9BMQxn8CzVLqrx6BxDgPYF8gZCxtyxMckXwCaYXrxAGbjkYH69F4wYhuAdHSWgRAQCuWwYmWCA6g39j4VPge5pv962XYvxwJpvn23Y5KvNZ5S5c6crdG4f4gTCXnU36x92fKMQzsQV9K4phcuNvMWkpqVB6xMA5aPzUeHcGytD93dG8D52P5BxsgaJJE6QqDrk3Y2vyLw9ZEbJhPRJxbuBKVCBtVx26Ldd46dq5eyyzmNEyQGLrjQ4qd978VtG8TNT5rkn4ETJQEju5HfCBbjm3urGLFVqxhGVawecT4YM9Rry4EqXWkRJGTFQWQRnweUFbKNbVTC9NxcXEp6K5rSPEy9trb5UYLYhhMJ9fWSBMuenGRjNSJxeurMRCaxPpNppBLFnp8qW5ezfHgCBpEjkSNNzP4uXMZFAXmdUfJ8XQdPTWuYfdHYc5TZWnzrdq9wcfFQRDpDB2zX5Myu96krDt9vA7wNKfYwkSczA6qUQV66jA8nV4Cs38cDAKVBXnxz22ddAVrPv8ajpu7hgBtULMURjvLt94Nc5FDKw79CTTQxffWEj9BJCDCpQnTufmT8xenywwVJvtj49yv2MP2mGECrVDRmcGUAYBKR8G6ZnFAYDVC9UhY46FGWDcyVX3HKwgtHeb45Ww7dsW8JdMnZYctaEU585GZmqTJp2LcAWRcQPH25JewnPX8pjzVpJNcy7avfA2bcU86bfASvQBDUCrhjgRmK2ECR6vzPwTsYKRgFrDqb62FeMdrKgJ9vKs435T5ACN7MNtdRXHQ4fj5pNpUMDW26Wd7tt9bkBTqEGf"

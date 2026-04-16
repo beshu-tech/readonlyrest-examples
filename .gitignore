@@ -3,3 +3,4 @@
 **/.DS_Store
 **/subst-xpack
 runner/.env
+runner/.current-example

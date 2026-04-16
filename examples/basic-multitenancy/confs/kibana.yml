@@ -1,4 +1,4 @@
-server.name: kibana-ror
+server.name: ${SERVER_NAME}
 server.host: 0.0.0.0
 
 elasticsearch.username: kibana

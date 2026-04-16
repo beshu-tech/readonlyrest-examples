@@ -7,55 +7,8 @@ if [ -z "${1:-}" ]; then
   set -- "$selected"
 fi
 
-example_arg="$1"
-if [[ "$example_arg" != */* ]]; then
-  example_arg="../examples/$example_arg"
-fi
-
-if [ ! -d "$example_arg" ]; then
-  echo "ERROR: Example '${1}' not found."
-  echo ""
-  echo "Available examples:"
-  for dir in ../examples/*/; do
-    [ -d "$dir" ] && echo "  - $(basename "$dir")"
-  done
-  # Suggest close matches (substring)
-  matches=()
-  for dir in ../examples/*/; do
-    name="$(basename "$dir")"
-    if [[ "$name" == *"${1}"* || "${1}" == *"$name"* ]]; then
-      matches+=("$name")
-    fi
-  done
-  if [ ${#matches[@]} -gt 0 ]; then
-    echo ""
-    echo "Did you mean:"
-    for m in "${matches[@]}"; do
-      echo "  $0 $m"
-    done
-  fi
-  exit 1
-fi
-
-export EXAMPLE_DIR
-EXAMPLE_DIR="$(cd "$example_arg" && pwd)"
-
-required_files=(
-  "confs/elasticsearch.yml"
-  "confs/readonlyrest.yml"
-  "confs/kibana.yml"
-)
-
-for required in "${required_files[@]}"; do
-  if [ ! -f "${EXAMPLE_DIR}/${required}" ]; then
-    echo "ERROR: Required file not found in example directory: ${required}"
-    exit 1
-  fi
-done
-
-if [ -f "${EXAMPLE_DIR}/.env" ]; then
-  cp "${EXAMPLE_DIR}/.env" .env
-fi
+# shellcheck source=utils/boot/prepare-example.sh
+source "$(dirname "$0")/utils/boot/prepare-example.sh" "${1:-}"
 
 if ! docker version &>/dev/null; then
   echo "No Docker found. Docker is required to run this Sandbox. See https://docs.docker.com/engine/install/"
@@ -67,7 +20,7 @@ if ! docker compose version &>/dev/null; then
   exit 2
 fi
 
-if ! docker compose config > /dev/null; then
+if ! docker compose "${COMPOSE_FILES[@]}" config > /dev/null; then
   echo "Cannot validate docker compose configuration. It seems you have to upgrade your Docker installation. See https://docs.docker.com/engine/install/"
   exit 3
 fi
@@ -83,21 +36,21 @@ echo -e "
                                          __/ |
 "
 
-./utils/boot/print-example-info.sh "$example_arg"
+./utils/boot/print-example-info.sh "$EXAMPLE_DIR"
 ./utils/boot/collect-info-about-ror-es-kbn.sh
-. ./utils/boot/check_license.sh "$example_arg"
+. ./utils/boot/check_license.sh "$(basename "$EXAMPLE_DIR")"
 
 echo "Starting Elasticsearch and Kibana with installed ReadonlyREST plugins ..."
 
 DOCKER_LOG=$(mktemp)
-if ! docker compose up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1; then
+if ! docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1; then
   cat "$DOCKER_LOG"
   rm -f "$DOCKER_LOG"
   exit 1
 fi
 rm -f "$DOCKER_LOG"
 
-docker compose logs -f > ror-cluster.log 2>&1 &
+docker compose "${COMPOSE_FILES[@]}" logs -f > ror-cluster.log 2>&1 &
 
 echo -e "
 ***********************************************************************
@@ -107,5 +60,9 @@ echo -e "
 ***********************************************************************
 "
 
-echo -e "You can access Kibana with ReadonlyREST here: https://localhost:15601"
-open https://localhost:15601
+if [ -f "${EXAMPLE_DIR}/scripts/post-start.sh" ]; then
+  source "${EXAMPLE_DIR}/scripts/post-start.sh"
+else
+  echo -e "You can access ReadonlyREST Kibana here: https://localhost:15601"
+  open https://localhost:15601
+fi

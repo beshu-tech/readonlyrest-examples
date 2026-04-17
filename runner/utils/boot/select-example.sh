@@ -28,30 +28,42 @@ fi
 
 cursor=0
 count=${#examples[@]}
+_total_lines=0
+_term_cols=$(tput cols 2>/dev/null || echo 80)
+
+# Reserve vertical space so the first render doesn't scroll the saved position away
+_reserve=$((count + 4))
+printf "%${_reserve}s" "" | tr ' ' '\n' >/dev/tty
+tput cuu "$_reserve" >/dev/tty 2>/dev/null
+printf '\r' >/dev/tty
 
 render_menu() {
-  if [ "${first_render:-1}" -eq 0 ]; then
-    printf '\033[%dA' "$count" >&2
+  if [ "$_total_lines" -gt 0 ]; then
+    tput cuu "$_total_lines" >/dev/tty 2>/dev/null
+    printf '\r' >/dev/tty
   fi
-  first_render=0
+  printf '\033[J' >/dev/tty
   for i in "${!examples[@]}"; do
-    printf '\033[2K' >&2
     if [ "$i" -eq "$cursor" ]; then
-      printf '\033[1m\033[7m > %s \033[0m\n' "${examples[$i]}" >&2
+      printf '\033[1m\033[7m > %s \033[0m\n' "${examples[$i]}" >/dev/tty
     else
-      printf '   %s\n' "${examples[$i]}" >&2
+      printf '   %s\n' "${examples[$i]}" >/dev/tty
     fi
   done
-  # Clear everything below the list, then print description
-  printf '\033[J' >&2
+  _total_lines=$count
   local desc="${descriptions[$cursor]}"
   if [ -n "$desc" ]; then
-    printf '\n   \033[2m%s\033[0m\n' "$desc" >&2
+    local max_len=$((_term_cols - 4))
+    if [ "${#desc}" -gt "$max_len" ]; then
+      desc="${desc:0:$((max_len - 3))}..."
+    fi
+    printf '\n   \033[2m%s\033[0m\n' "$desc" >/dev/tty
+    _total_lines=$((_total_lines + 2))
   fi
 }
 
-echo "Select an example to run (use arrow keys, press Enter to confirm):" >&2
-echo "" >&2
+echo "Select an example to run (use arrow keys, press Enter to confirm):" >/dev/tty
+echo "" >/dev/tty
 tput civis >/dev/tty 2>/dev/null
 trap 'tput cnorm >/dev/tty 2>/dev/null' EXIT
 render_menu
@@ -70,6 +82,6 @@ while true; do
   render_menu
 done
 tput cnorm >/dev/tty 2>/dev/null
-echo "" >&2
+echo "" >/dev/tty
 
 printf '%s' "${examples[$cursor]}"

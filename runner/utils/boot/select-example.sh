@@ -28,26 +28,30 @@ fi
 
 cursor=0
 count=${#examples[@]}
-_term_cols=$(tput cols 2>/dev/null || echo 80)
+_need_reinit=0
 
-# Reserve vertical space so the saved cursor position doesn't get invalidated by scrolling
-_max_desc_lines=0
-for _d in "${descriptions[@]}"; do
-  if [ -n "$_d" ]; then
-    _first=$((_term_cols - 3))
-    if [ "${#_d}" -le "$_first" ]; then
-      _dl=1
-    else
-      _dl=$((1 + (${#_d} - _first + _term_cols - 1) / _term_cols))
+init_display() {
+  _term_cols=$(tput cols 2>/dev/null || echo 80)
+  _max_desc_lines=0
+  for _d in "${descriptions[@]}"; do
+    if [ -n "$_d" ]; then
+      _first=$((_term_cols - 3))
+      if [ "${#_d}" -le "$_first" ]; then
+        _dl=1
+      else
+        _dl=$((1 + (${#_d} - _first + _term_cols - 1) / _term_cols))
+      fi
+      [ "$_dl" -gt "$_max_desc_lines" ] && _max_desc_lines=$_dl
     fi
-    [ "$_dl" -gt "$_max_desc_lines" ] && _max_desc_lines=$_dl
-  fi
-done
-_reserve=$((count + 1 + _max_desc_lines + 2))
-printf "%${_reserve}s" "" | tr ' ' '\n' >/dev/tty
-tput cuu "$_reserve" >/dev/tty 2>/dev/null
-printf '\r' >/dev/tty
-tput sc >/dev/tty 2>/dev/null
+  done
+  _reserve=$((count + 1 + _max_desc_lines + 4))
+  printf "%${_reserve}s" "" | tr ' ' '\n' >/dev/tty
+  tput cuu "$_reserve" >/dev/tty 2>/dev/null
+  printf '\r' >/dev/tty
+  echo "Select an example to run (use arrow keys, press Enter to confirm):" >/dev/tty
+  echo "" >/dev/tty
+  tput sc >/dev/tty 2>/dev/null
+}
 
 render_menu() {
   tput rc >/dev/tty 2>/dev/null
@@ -65,13 +69,32 @@ render_menu() {
   fi
 }
 
-echo "Select an example to run (use arrow keys, press Enter to confirm):" >/dev/tty
-echo "" >/dev/tty
+reinit_display() {
+  tput clear >/dev/tty 2>/dev/null
+  init_display
+  render_menu
+}
+
+on_winch() { _need_reinit=1; }
+trap on_winch WINCH
+
 tput civis >/dev/tty 2>/dev/null
 trap 'tput cnorm >/dev/tty 2>/dev/null' EXIT
+init_display
 render_menu
 while true; do
-  IFS= read -rsn1 key </dev/tty
+  if ! IFS= read -rsn1 key </dev/tty; then
+    if [ "$_need_reinit" -eq 1 ]; then
+      _need_reinit=0
+      reinit_display
+    fi
+    continue
+  fi
+  if [ "$_need_reinit" -eq 1 ]; then
+    _need_reinit=0
+    reinit_display
+    continue
+  fi
   case "$key" in
     $'\x1b')
       read -rsn2 seq </dev/tty

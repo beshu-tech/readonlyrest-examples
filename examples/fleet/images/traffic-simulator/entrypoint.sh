@@ -1,4 +1,8 @@
 #!/bin/bash -x
+#
+# Generates continuous HTTP traffic against demo-app so APM traces and errors
+# appear in Kibana without any manual interaction.
+# ~10% of requests hit /error to produce a visible error rate in APM.
 
 while true; do
   RAND=$(( RANDOM % 10 + 1 ))

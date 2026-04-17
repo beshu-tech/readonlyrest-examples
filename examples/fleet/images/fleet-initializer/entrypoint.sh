@@ -1,7 +1,13 @@
 #!/bin/bash -x
+#
+# One-shot initializer: configures Fleet via the Kibana Fleet API after the
+# Fleet Server is healthy.  Runs once and exits so Docker marks it "completed".
+# apm-agent depends on this container completing successfully before it starts.
 
 KIBANA_URL="https://kbn-ror:5601"
 
+# Wrapper around curl that prints the HTTP status code and fails loudly on
+# non-2xx responses so the script exits at the first failing API call.
 check_curl() {
   local description="$1"
   shift
@@ -27,6 +33,8 @@ check_curl() {
   fi
 }
 
+# Poll until Kibana responds with JSON — Fleet Server may already be healthy
+# but Kibana's Fleet plugin can take a few extra seconds to become ready.
 while true; do
   if curl -f -i --cacert /certs/ca.crt -u kibana:kibana "$KIBANA_URL/api/features" | grep -q 'content-type: application/json'; then
 
@@ -35,12 +43,18 @@ while true; do
     echo "=== Checking Kibana Info ==="
     curl -s -u "kibana:kibana" --cacert /certs/ca.crt "$KIBANA_URL/api/status" | jq '.version, .status'
 
+    # The Fleet Server Host API changed between major versions (v8 uses a
+    # top-level settings endpoint; v9+ has a dedicated fleet_server_hosts
+    # resource), so we branch on the detected major version below.
     KBN_MAJOR_VERSION=$(curl -s -u "kibana:kibana" --cacert /certs/ca.crt "$KIBANA_URL/api/status" | jq -r '.version.number' | cut -d. -f1)
     echo "Detected Kibana major version: $KBN_MAJOR_VERSION"
 
     echo "=== Current Fleet settings ==="
     curl -s -u "kibana:kibana" --cacert /certs/ca.crt "$KIBANA_URL/api/fleet/settings" | jq .
 
+    # Create the agent policy that regular (non-server) agents will enroll into.
+    # The fleet-server itself uses a separate policy (fleet-server-policy) that
+    # was created by Kibana on startup via xpack.fleet.agentPolicies in kibana.yml.
     if ! check_curl "Create Elastic Agent Policy" \
       -s -u "kibana:kibana" --cacert /certs/ca.crt \
       -XPOST -H "kbn-xsrf: kibana" -H "Content-type: application/json" \
@@ -50,6 +64,8 @@ while true; do
       exit 1
     fi
 
+    # Detect the currently installed version of the system integration package
+    # so we pin the policy to the exact version that is already cached in Kibana.
     echo "=== Detecting package versions ==="
     SYSTEM_VERSION=$(curl -s -u "kibana:kibana" --cacert /certs/ca.crt \
       "$KIBANA_URL/api/fleet/epm/packages/system" | jq -r '.item.version')
@@ -61,6 +77,8 @@ while true; do
 
     echo "Detected system package version: $SYSTEM_VERSION"
 
+    # Add the system integration to elastic-policy so the enrolled agent
+    # automatically collects host metrics (CPU, memory, disk, network).
     if ! check_curl "Create System Package Policy" \
       -s -u "kibana:kibana" --cacert /certs/ca.crt \
       -XPOST -H "kbn-xsrf: kibana" -H "Content-type: application/json" \
@@ -81,6 +99,9 @@ while true; do
 
     echo "Detected APM package version: $APM_VERSION"
 
+    # Add the APM integration to elastic-policy.  The enrolled agent will run
+    # an APM Server on 0.0.0.0:8200 with TLS using the shared certs.
+    # url must match the Docker hostname so demo-app can reach it inside the network.
     if ! check_curl "Create APM Package Policy" \
       -s -u "kibana:kibana" --cacert /certs/ca.crt \
       -XPOST -H "kbn-xsrf: kibana" -H "Content-type: application/json" \
@@ -90,6 +111,9 @@ while true; do
       exit 1
     fi
 
+    # Register the Fleet Server host so agents know where to enroll.
+    # Kibana v9+ introduced a dedicated fleet_server_hosts API; v8 used the
+    # global /api/fleet/settings endpoint — handle both.
     if [ "$KBN_MAJOR_VERSION" -ge 9 ]; then
       EXISTING_HOST_ID=$(curl -s -u "kibana:kibana" --cacert /certs/ca.crt \
         "$KIBANA_URL/api/fleet/fleet_server_hosts" | jq -r '.items[0].id // empty')
@@ -124,6 +148,9 @@ while true; do
       fi
     fi
 
+    # Point the default Fleet output at the ROR-secured Elasticsearch node.
+    # ssl.verification_mode=certificate accepts the self-signed cert without
+    # hostname verification, which is fine inside the isolated Docker network.
     if ! check_curl "Update Fleet Output" \
       -s -u "kibana:kibana" --cacert /certs/ca.crt \
       -XPUT -H "kbn-xsrf: kibana" -H "Content-type: application/json" \

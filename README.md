@@ -1,4 +1,5 @@
-# readonlyrest-examples
+# ReadonlyREST examples
+
 Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticsearch and Kibana.
 
 ## Prerequisites
@@ -6,18 +7,20 @@ Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticse
 - Docker with `docker compose` plugin
 - A ReadonlyREST activation key (only for examples that require a PRO or ENT license — you will be prompted when needed)
 
+> **Windows users:** use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (recommended) or Git Bash. PowerShell is not supported.
+
 ## Quick start
 
 Run any example with a single command (no clone needed):
 
 ```bash
-curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh | bash
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/quickstart.sh | bash
 ```
 
 Or pass the example name directly:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh | bash -s basic-multitenancy
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/quickstart.sh | bash -s basic-multitenancy
 ```
 
 Some examples require a ReadonlyREST PRO or ENT activation key. If needed, you will be prompted to enter it. You can also set it once as an environment variable:
@@ -29,7 +32,7 @@ export ROR_ACTIVATION_KEY="your-key-here"
 To stop and clean up:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh | bash -s -- --clean
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/quickstart.sh | bash -s -- --clean
 ```
 
 ### From a local clone

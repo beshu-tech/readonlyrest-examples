@@ -28,20 +28,29 @@ fi
 
 cursor=0
 count=${#examples[@]}
-_total_lines=0
 _term_cols=$(tput cols 2>/dev/null || echo 80)
 
-# Reserve vertical space so the first render doesn't scroll the saved position away
-_reserve=$((count + 4))
+# Reserve vertical space so the saved cursor position doesn't get invalidated by scrolling
+_max_desc_lines=0
+for _d in "${descriptions[@]}"; do
+  if [ -n "$_d" ]; then
+    _first=$((_term_cols - 3))
+    if [ "${#_d}" -le "$_first" ]; then
+      _dl=1
+    else
+      _dl=$((1 + (${#_d} - _first + _term_cols - 1) / _term_cols))
+    fi
+    [ "$_dl" -gt "$_max_desc_lines" ] && _max_desc_lines=$_dl
+  fi
+done
+_reserve=$((count + 1 + _max_desc_lines + 2))
 printf "%${_reserve}s" "" | tr ' ' '\n' >/dev/tty
 tput cuu "$_reserve" >/dev/tty 2>/dev/null
 printf '\r' >/dev/tty
+tput sc >/dev/tty 2>/dev/null
 
 render_menu() {
-  if [ "$_total_lines" -gt 0 ]; then
-    tput cuu "$_total_lines" >/dev/tty 2>/dev/null
-    printf '\r' >/dev/tty
-  fi
+  tput rc >/dev/tty 2>/dev/null
   printf '\033[J' >/dev/tty
   for i in "${!examples[@]}"; do
     if [ "$i" -eq "$cursor" ]; then
@@ -50,15 +59,9 @@ render_menu() {
       printf '   %s\n' "${examples[$i]}" >/dev/tty
     fi
   done
-  _total_lines=$count
   local desc="${descriptions[$cursor]}"
   if [ -n "$desc" ]; then
-    local max_len=$((_term_cols - 4))
-    if [ "${#desc}" -gt "$max_len" ]; then
-      desc="${desc:0:$((max_len - 3))}..."
-    fi
     printf '\n   \033[2m%s\033[0m\n' "$desc" >/dev/tty
-    _total_lines=$((_total_lines + 2))
   fi
 }
 

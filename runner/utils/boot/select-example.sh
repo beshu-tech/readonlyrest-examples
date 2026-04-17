@@ -54,8 +54,8 @@ while true; do
     $'\x1b')
       read -rsn2 seq </dev/tty
       case "$seq" in
-        '[A') ((cursor > 0)) && ((cursor--)) ;;
-        '[B') ((cursor < count - 1)) && ((cursor++)) ;;
+        '[A') [ "$cursor" -gt 0 ] && cursor=$((cursor - 1)) ;;
+        '[B') [ "$cursor" -lt $((count - 1)) ] && cursor=$((cursor + 1)) ;;
       esac
       ;;
     '') break ;;

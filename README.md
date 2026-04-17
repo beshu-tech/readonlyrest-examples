@@ -11,13 +11,13 @@ Ready-to-run Docker examples for various ReadonlyREST deployments with Elasticse
 Run any example with a single command (no clone needed):
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh)
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh | bash
 ```
 
 Or pass the example name directly:
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh) basic-multitenancy
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh | bash -s basic-multitenancy
 ```
 
 Some examples require a ReadonlyREST PRO or ENT activation key. If needed, you will be prompted to enter it. You can also set it once as an environment variable:
@@ -29,7 +29,7 @@ export ROR_ACTIVATION_KEY="your-key-here"
 To stop and clean up:
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh) --clean
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/bootstrap.sh | bash -s -- --clean
 ```
 
 ### From a local clone

@@ -10,7 +10,11 @@ if [ "${1:-}" = "--clean" ]; then
     exit 0
   fi
   cd "$REPO_DIR"
-  exec ./clean.sh
+  ./clean.sh
+  cd ..
+  rm -rf "$REPO_DIR"
+  echo "Removed $REPO_DIR directory."
+  exit 0
 fi
 
 if [ -d "$REPO_DIR" ]; then

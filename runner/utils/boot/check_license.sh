@@ -77,7 +77,7 @@ prompt_activation_key_if_needed() {
   echo "  To obtain a trial activation key, visit:"
   echo "  https://readonlyrest.com/trial"
   echo ""
-  read -rp "Enter your ROR_ACTIVATION_KEY: " ROR_ACTIVATION_KEY
+  read -rp "Enter your ROR_ACTIVATION_KEY: " ROR_ACTIVATION_KEY </dev/tty
   export ROR_ACTIVATION_KEY
 
   if [ -z "$ROR_ACTIVATION_KEY" ]; then

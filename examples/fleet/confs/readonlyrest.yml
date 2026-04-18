@@ -1,0 +1,34 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+
+    - name: "Fleet server"
+      type: allow
+      token_authentication:
+        type: "service-token"
+        username: "fleet"
+      indices: [".fleet-servers", ".fleet-agents", ".fleet-actions", ".fleet-policies", ".fleet-policies-leader", ".fleet-enrollment-api-keys"]
+
+    - name: "Agents"
+      type: allow
+      token_authentication:
+        type: "api-key"
+        username: "fleet"
+      indices: [".apm-agent-configuration", "metrics-*", "traces-*", "logs-*"]
+
+    - name: "Forbid access to service accounts and API keys"
+      type: forbid
+      actions: ["cluster:admin/xpack/security/service_account/*", "cluster:admin/xpack/security/api_key/*"]
+
+    - name: "Admins"
+      auth_key: admin:admin
+      kibana:
+        access: admin

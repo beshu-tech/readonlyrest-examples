@@ -1,0 +1,131 @@
+services:
+
+  # Mount fleet-specific TLS certs over the runner's baked-in certs so all
+  # services in this example share one CA.
+  es-ror:
+    volumes:
+      - ${EXAMPLE_DIR}/certs/ca.crt:/usr/share/elasticsearch/config/ca.crt:ro
+      - ${EXAMPLE_DIR}/certs/elasticsearch.crt:/usr/share/elasticsearch/config/elasticsearch.crt:ro
+      - ${EXAMPLE_DIR}/certs/elasticsearch.key:/usr/share/elasticsearch/config/elasticsearch.key:ro
+
+  kbn-ror:
+    volumes:
+      - ${EXAMPLE_DIR}/certs/kibana.crt:/usr/share/kibana/config/kibana.crt:ro
+      - ${EXAMPLE_DIR}/certs/kibana.key:/usr/share/kibana/config/kibana.key:ro
+
+  fleet-server:
+    image: elastic/elastic-agent:${ES_VERSION}
+    hostname: fleet-server
+    depends_on:
+      es-ror:
+        condition: service_healthy
+      kbn-ror:
+        condition: service_healthy
+    ports:
+      - "8220:8220"
+    restart: always
+    user: "1000"
+    volumes:
+      - ${EXAMPLE_DIR}/certs:/certs:ro
+    environment:
+      - FLEET_ENROLL=1
+      - FLEET_SERVER_POLICY_ID=fleet-server-policy
+      - FLEET_SERVER_ENABLE=1
+      - KIBANA_FLEET_SETUP=1
+      - KIBANA_HOST=https://kbn-ror:5601
+      - KIBANA_FLEET_CA=/certs/ca.crt
+      - FLEET_URL=https://fleet-server:8220
+      - FLEET_SERVER_ELASTICSEARCH_HOST=https://es-ror:9200
+      - FLEET_CA=/certs/ca.crt
+      - ELASTICSEARCH_USERNAME=kibana
+      - ELASTICSEARCH_PASSWORD=kibana
+      - FLEET_SERVER_CERT=/certs/fleet-server.crt
+      - FLEET_SERVER_CERT_KEY=/certs/fleet-server.key
+      - FLEET_SERVER_ELASTICSEARCH_CA=/certs/ca.crt
+      - ELASTIC_AGENT_LOG_LEVEL=info
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fksS https://localhost:8220/api/status | grep -q '\"status\":\"HEALTHY\"'"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+    networks:
+      - ror-network
+
+  fleet-initializer:
+    build:
+      context: ${EXAMPLE_DIR}/images/fleet-initializer
+      dockerfile: Dockerfile
+    hostname: fleet-initializer
+    volumes:
+      - ${EXAMPLE_DIR}/certs:/certs:ro
+    depends_on:
+      es-ror:
+        condition: service_healthy
+      kbn-ror:
+        condition: service_healthy
+      fleet-server:
+        condition: service_healthy
+    networks:
+      - ror-network
+
+  apm-agent:
+    build:
+      context: ${EXAMPLE_DIR}/images/apm-agent
+      dockerfile: Dockerfile
+      args:
+        ES_VERSION: ${ES_VERSION:-ES_VERSION_NOT_CONFIGURED}
+    hostname: apm-agent
+    restart: always
+    user: root
+    depends_on:
+      es-ror:
+        condition: service_healthy
+      kbn-ror:
+        condition: service_healthy
+      fleet-initializer:
+        condition: service_completed_successfully
+    volumes:
+      - ${EXAMPLE_DIR}/certs:/certs:ro
+    ports:
+      - "8201:8200"
+    environment:
+      - FLEET_ENROLL=1
+      - FLEET_URL=https://fleet-server:8220
+      - FLEET_CA=/certs/ca.crt
+      - KIBANA_HOST=https://kbn-ror:5601
+      - KIBANA_FLEET_CA=/certs/ca.crt
+    networks:
+      - ror-network
+
+  demo-app:
+    build:
+      context: ${EXAMPLE_DIR}/images/demo-app
+      dockerfile: Dockerfile
+    hostname: demo-app
+    depends_on:
+      apm-agent:
+        condition: service_started
+    ports:
+      - "3001:3000"
+    volumes:
+      - ${EXAMPLE_DIR}/certs:/certs:ro
+    environment:
+      - ELASTIC_APM_SERVER_CA_CERT_FILE=/certs/ca.crt
+    networks:
+      - ror-network
+
+  traffic-simulator:
+    build:
+      context: ${EXAMPLE_DIR}/images/traffic-simulator
+      dockerfile: Dockerfile
+    hostname: traffic-simulator
+    depends_on:
+      demo-app:
+        condition: service_started
+    networks:
+      - ror-network

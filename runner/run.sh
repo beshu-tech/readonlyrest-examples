@@ -40,33 +40,11 @@ echo -e "
 ./utils/boot/collect-info-about-ror-es-kbn.sh
 . ./utils/boot/check_license.sh "$(basename "$EXAMPLE_DIR")"
 
-echo "Starting Elasticsearch and Kibana with installed ReadonlyREST plugins ..."
+echo -e ""
 
-DOCKER_LOG=$(mktemp)
-if ! docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate > "$DOCKER_LOG" 2>&1; then
-  cat "$DOCKER_LOG"
-  rm -f "$DOCKER_LOG"
-  exit 1
-fi
-rm -f "$DOCKER_LOG"
+./utils/boot/run-with-spinner.sh \
+  "Starting Elasticsearch and Kibana with installed ReadonlyREST plugins" \
+  docker compose "${COMPOSE_FILES[@]}" up -d --build --wait --remove-orphans --force-recreate
 
-docker compose "${COMPOSE_FILES[@]}" logs -f > ror-cluster.log 2>&1 &
-
-echo -e "
-***********************************************************************
-***                                                                 ***
-***          TIME TO PLAY!!!                                        ***
-***                                                                 ***
-***********************************************************************
-"
-
-if [ -f "${EXAMPLE_DIR}/scripts/post-start.sh" ]; then
-  source "${EXAMPLE_DIR}/scripts/post-start.sh"
-else
-  echo -e "You can access ReadonlyREST Kibana here: https://localhost:15601"
-  if command -v open &>/dev/null; then
-    open https://localhost:15601
-  elif command -v xdg-open &>/dev/null; then
-    xdg-open https://localhost:15601
-  fi
-fi
+# shellcheck source=utils/boot/post-start.sh
+. ./utils/boot/post-start.sh

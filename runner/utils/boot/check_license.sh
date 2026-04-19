@@ -59,5 +59,33 @@ check_min_license_edition() {
   fi
 }
 
+prompt_activation_key_if_needed() {
+  local min_edition
+  min_edition=$(grep -E '^ROR_MIN_LICENSE_EDITION=' "${EXAMPLE_DIR}/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d '[:space:]')
+
+  if [ -n "${ROR_ACTIVATION_KEY:-}" ]; then
+    return
+  fi
+
+  if [ -z "$min_edition" ] || [ "$min_edition" = "FREE" ]; then
+    return
+  fi
+
+  echo ""
+  echo "This example requires a $min_edition (or higher) ReadonlyREST license."
+  echo ""
+  echo "  To obtain a trial activation key, visit:"
+  echo "  https://readonlyrest.com/trial"
+  echo ""
+  read -rp "Enter your ROR_ACTIVATION_KEY: " ROR_ACTIVATION_KEY </dev/tty
+  export ROR_ACTIVATION_KEY
+
+  if [ -z "$ROR_ACTIVATION_KEY" ]; then
+    echo "ERROR: No activation key provided." >&2
+    exit 1
+  fi
+}
+
+prompt_activation_key_if_needed
 detect_license_edition
 check_min_license_edition "$1"

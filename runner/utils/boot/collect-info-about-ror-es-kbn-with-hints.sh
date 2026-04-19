@@ -3,12 +3,14 @@
 source "$(dirname "$0")/collect-info-about-ror-es-kbn-with-hints-common.sh"
 
 ROR_API_RESPONSE=''
-STATUS_CODE=$(curl -s --max-time 5 -o /tmp/ror-api-response.txt -w "%{http_code}" https://api.beshu.tech/list_es_versions/20)
+_ROR_API_TMP=$(mktemp)
+STATUS_CODE=$(curl -s --max-time 5 -o "$_ROR_API_TMP" -w "%{http_code}" https://api.beshu.tech/list_es_versions/20)
 
 if [[ "$STATUS_CODE" -eq 200 ]]; then
-  ROR_API_RESPONSE=$(cat /tmp/ror-api-response.txt)
-  rm /tmp/ror-api-response.txt
+  ROR_API_RESPONSE=$(cat "$_ROR_API_TMP")
+  rm -f "$_ROR_API_TMP"
 else
+  rm -f "$_ROR_API_TMP"
   echo "ReadonlyREST API Error. Please try again later ..." 
   exit 128
 fi

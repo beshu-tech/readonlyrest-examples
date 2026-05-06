@@ -1,0 +1,94 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    # Kibana internal service account — unrestricted access for Kibana's own requests
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
+    # Admin — full unrestricted access
+    - name: "Admin"
+      type: allow
+      auth_key: admin:admin
+      kibana:
+        access: admin
+
+    # Alice — can create and invalidate her own AI/MCP API keys using her own credentials
+    - name: "Alice - manage own API keys"
+      type: allow
+      groups: ["alice-group"]
+      actions:
+        - "cluster:admin/xpack/security/api_key/create"
+        - "cluster:admin/xpack/security/api_key/invalidate"
+
+    # Bob — can create and invalidate his own AI/MCP API keys using his own credentials
+    - name: "Bob - manage own API keys"
+      type: allow
+      groups: ["bob-group"]
+      actions:
+        - "cluster:admin/xpack/security/api_key/create"
+        - "cluster:admin/xpack/security/api_key/invalidate"
+
+    # Prevent every other identity — including API-key-authenticated sessions — from
+    # creating, listing, or invalidating API keys or service accounts.
+    # Without this block an AI/MCP token or an unmatched user could call
+    # _security/api_key and escalate privileges or enumerate keys.
+    # See: https://docs.readonlyrest.com/examples/fleet#why-the-forbid-block-is-necessary
+    - name: "Forbid API key and service account management for all others"
+      type: forbid
+      actions:
+        - "cluster:admin/xpack/security/api_key/*"
+        - "cluster:admin/xpack/security/service_account/*"
+
+    # Alice — simulated per-user local identity (stands in for an LDAP/SAML/OIDC user)
+    # In production, this user would come from a real identity provider
+    - name: "Alice local access"
+      type: allow
+      groups: ["alice-group"]
+      indices: ["alice-logs"]
+      kibana: 
+        access: rw
+
+    # Bob — simulated per-user local identity (stands in for an LDAP/SAML/OIDC user)
+    # In production, this user would come from a real identity provider
+    - name: "Bob local access"
+      type: allow
+      groups: ["bob-group"]
+      indices: ["bob-logs"]
+      kibana: 
+        access: rw
+
+    # AI/MCP access path via Elasticsearch-native API keys
+    # ROR validates the API key and enforces read-only actions and the index scope.
+    # alice-reports and bob-reports are dedicated AI/MCP indices, separate from the
+    # operational log indices (alice-logs, bob-logs) which are inaccessible via API keys.
+    - name: "AI/MCP API key access"
+      type: allow
+      token_authentication:
+        type: "api-key"
+        username: "ai-mcp"
+      indices: ["alice-reports", "bob-reports"]
+      actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
+
+  users:
+
+    # Local users simulate per-user identities from a production identity provider.
+    # LDAP is intentionally not used in this PoC.
+
+    - username: alice
+      auth_key: alice:alice # it could be an LDAP rule here instead
+      groups:
+        - id: "alice-group"
+          name: "Alice"
+
+    - username: bob
+      auth_key: bob:bob # it could be an LDAP rule here instead
+      groups:
+        - id: "bob-group"
+          name: "Bob"

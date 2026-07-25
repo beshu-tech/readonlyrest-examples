@@ -18,7 +18,7 @@ if [[ ! -v ROR_VERSION || -z "$ROR_VERSION" ]]; then
 fi
 
 echo "Installing ES ReadonlyREST $ROR_VERSION..."
-/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch "https://api.beshu.tech/download/es?esVersion=$ES_VERSION&pluginVersion=$ROR_VERSION&email=ror-sandbox%40readonlyrest.com"
+/usr/share/elasticsearch/bin/elasticsearch-plugin install --batch "https://api.beshu.tech/download/es?esVersion=$ES_VERSION&pluginVersion=$ROR_VERSION&email=ror-examples%40readonlyrest.com"
 
 echo "Patching ES ReadonlyREST $ROR_VERSION..."
 

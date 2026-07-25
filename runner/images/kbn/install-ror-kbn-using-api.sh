@@ -20,7 +20,7 @@ if greater_than_or_equal "$ROR_VERSION" "1.43.0" && greater_than_or_equal "$KBN_
 else
   ROR_KBN_EDITION="kbn_free"
 fi
-ROR_DOWNLOAD_URL="https://api.beshu.tech/download/kbn?esVersion=$KBN_VERSION&pluginVersion=$ROR_VERSION&edition=$ROR_KBN_EDITION&email=ror-sandbox%40readonlyrest.com"
+ROR_DOWNLOAD_URL="https://api.beshu.tech/download/kbn?esVersion=$KBN_VERSION&pluginVersion=$ROR_VERSION&edition=$ROR_KBN_EDITION&email=ror-examples%40readonlyrest.com"
 
 echo "Installing KBN ReadonlyREST $ROR_VERSION..."
 if ! greater_than_or_equal "$KBN_VERSION" "7.0.0"; then

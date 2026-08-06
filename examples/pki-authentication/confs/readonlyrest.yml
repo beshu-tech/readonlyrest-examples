@@ -8,6 +8,13 @@ readonlyrest:
       auth_key: admin:admin
       verbosity: error
 
+    # Kibana's own service account. It authenticates with a password: Kibana is a browser front end and
+    # never presents a client certificate, which is exactly why mixed mode matters.
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
     # Services whose certificate carries the 'ingest' role. No password anywhere.
     - name: "Ingest services"
       groups: ["ingest"]
@@ -20,12 +27,13 @@ readonlyrest:
       actions: ["indices:data/read/*", "indices:admin/get", "indices:admin/mappings/get"]
       indices: ["logs-*"]
 
-    # A human on the very same port. Callers with no certificate fall through to here,
-    # which is what makes mixed mode work.
+    # A human on the very same port, in a browser rather than a script. Callers with no certificate fall
+    # through to here, which is what makes mixed mode work.
     - name: "Analysts"
       auth_key: analyst:analyst
-      actions: ["indices:data/read/*", "indices:admin/get", "indices:admin/mappings/get"]
       indices: ["logs-*"]
+      kibana:
+        access: ro
 
   users:
     - username: "*"

@@ -28,21 +28,24 @@ extractor authenticates humans as services.
 
 ## Running it
 
-PKI is not in a released ReadonlyREST yet, so this example runs a locally built plugin. From the
-`elasticsearch-readonlyrest-plugin` repository:
-
-```bash
-./gradlew clean buildRorPlugin '-PesVersion=9.4.4'
-```
-
-Point `ROR_ES_FILE` in [`.env`](.env) at the zip it produces under `es94x/build/distributions/`, then:
-
 ```bash
 ./run.sh pki-authentication
 ```
 
-Only the `es94x` module implements PKI so far, so `ES_VERSION` has to be one it supports (9.4.x or
-9.5.0).
+PKI is not in a released ReadonlyREST yet, so the plugin ships with this repository — you do not need to
+build anything. It sits in `runner/plugins/`, because the Docker build context is `runner/` and
+`ROR_ES_FILE` is a `COPY` source that has to be relative to it.
+
+To refresh it after changing the plugin, rebuild from the `elasticsearch-readonlyrest-plugin` repository
+and copy the result over:
+
+```bash
+./gradlew clean buildRorPlugin '-PesVersion=9.5.0'
+cp es94x/build/distributions/readonlyrest-*_es9.5.0.zip <this-repo>/runner/plugins/
+```
+
+ES 9.5.0 is what the PKI integration suites were run against. Only the `es94x` module implements PKI so
+far, and it covers ES 9.4.x and 9.5.0.
 
 Kibana comes up alongside, at <https://localhost:15601>, where `analyst:analyst` can log in. It is there
 to make the point that a browser never presents a client certificate: Kibana authenticates with a

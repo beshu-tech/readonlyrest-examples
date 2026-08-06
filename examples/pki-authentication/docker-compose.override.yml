@@ -1,0 +1,7 @@
+services:
+
+  # The CA that issued the client certificates has to sit next to elasticsearch.yml, so the node can
+  # verify the chains the services present.
+  es-ror:
+    volumes:
+      - ${EXAMPLE_DIR}/certs/pki-ca.crt:/usr/share/elasticsearch/config/pki-ca.crt:ro

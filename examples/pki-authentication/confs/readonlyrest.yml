@@ -1,0 +1,54 @@
+readonlyrest:
+
+  access_control_rules:
+
+    # The cluster initializer and the health checks come in as this user.
+    - name: "ADMIN"
+      type: allow
+      auth_key: admin:admin
+      verbosity: error
+
+    # Services whose certificate carries the 'ingest' role. No password anywhere.
+    - name: "Ingest services"
+      groups: ["ingest"]
+      actions: ["indices:data/write/*", "indices:admin/*"]
+      indices: ["logs-*"]
+
+    # Services whose certificate carries the 'query' role. Read only.
+    - name: "Query services"
+      groups: ["query"]
+      actions: ["indices:data/read/*", "indices:admin/get", "indices:admin/mappings/get"]
+      indices: ["logs-*"]
+
+    # A human on the very same port. Callers with no certificate fall through to here,
+    # which is what makes mixed mode work.
+    - name: "Analysts"
+      auth_key: analyst:analyst
+      actions: ["indices:data/read/*", "indices:admin/get", "indices:admin/mappings/get"]
+      indices: ["logs-*"]
+
+  users:
+    - username: "*"
+      groups:
+        # Only the role OUs are mapped. Every certificate also carries OU=Services, which places it in
+        # the corporate tree rather than naming a role - it matches no mapping and is simply discarded.
+        - local_group: { id: "ingest", name: "ingest" }
+          external_group_ids: ["ingest"]
+        - local_group: { id: "query", name: "query" }
+          external_group_ids: ["query"]
+      pki_auth:
+        name: "corporate_pki"
+        groups_any_of: ["ingest", "query"]
+
+  pkis:
+    - name: corporate_pki
+      # The same CA also issues to the People branch; this keeps those certificates out, so a human
+      # certificate cannot authenticate as a service even though the node trusts it.
+      subject_dn_base: "OU=Services,DC=corp,DC=example,DC=com"
+      # Any CA the node trusts could mint a certificate saying CN=svc-logstash. Pinning the issuer is
+      # what stops one of them impersonating a service issued by another.
+      issuer_dn: "CN=Corp Issuing CA,DC=corp,DC=example,DC=com"
+      users:
+        user_id_attribute: "CN"
+      groups:
+        group_id_attribute: "OU"

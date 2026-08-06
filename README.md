@@ -62,6 +62,7 @@ To stop and clean up:
 | [basic-multitenancy](examples/basic-multitenancy) | Multi-tenancy: isolated Kibana spaces and index access per user |
 | [kibana-reverse-proxy](examples/kibana-reverse-proxy) | Two Kibana nodes behind an Apache HTTPS reverse proxy with sticky-session load balancing, SSL termination, and a configurable base-path rewriting strategy |
 | [fleet](examples/fleet) | Full Elastic Fleet stack: Fleet Server, Elastic Agent with APM, and an instrumented Node.js service, all secured with ReadonlyREST |
+| [pki-authentication](examples/pki-authentication) | Services authenticating with a TLS client certificate instead of a password, with groups read from the certificate and a password user sharing the same port |
 
 ## Project structure
 

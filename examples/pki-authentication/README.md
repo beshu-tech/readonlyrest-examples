@@ -1,55 +1,72 @@
-# PKI authentication
+# PKI Authentication Example
 
 Demonstrates authenticating services by their TLS client certificate: ReadonlyREST derives the username and groups from the certificate, while password-based users share the same port.
 
-## What it shows
+## Users
 
-Three certificates, one CA, and a deliberately awkward fourth case:
+| Identity        | Credential                                       | Group    | Kibana access | Access to `logs-*` |
+|-----------------|--------------------------------------------------|----------|---------------|--------------------|
+| `svc-logstash`  | Certificate `CN=svc-logstash,OU=ingest,OU=Services` | `ingest` | None          | Write              |
+| `svc-dashboard` | Certificate `CN=svc-dashboard,OU=query,OU=Services` | `query`  | None          | Read               |
+| `jsmith`        | Certificate `CN=jsmith,OU=ingest,OU=People`      | —        | None          | Refused            |
+| `analyst`       | Password `analyst`                               | —        | Read-only     | Read               |
 
-| Certificate | Subject | What happens |
-| --- | --- | --- |
-| `svc-logstash` | `CN=svc-logstash,OU=ingest,OU=Services,DC=corp,…` | Authenticated as `svc-logstash`, group `ingest`, may **write** `logs-*` |
-| `svc-dashboard` | `CN=svc-dashboard,OU=query,OU=Services,DC=corp,…` | Authenticated as `svc-dashboard`, group `query`, may **read** `logs-*` |
-| `jsmith` | `CN=jsmith,OU=ingest,OU=People,DC=corp,…` | **Refused.** Same CA, same `OU=ingest` role, but issued into the People branch |
-| *(none)* | — | Falls through to `analyst:analyst`, the password block on the same port — this is how Kibana connects |
+The three certificates come from the same CA. None of the services holds a password.
 
-`jsmith` is the interesting one. The node trusts that certificate — it chains to the same CA — and it
-even carries the `ingest` role. It is refused because the provider declares:
+`jsmith` is refused even though the node trusts that certificate and it carries the same `ingest` role, because the certificate is issued into the People branch and the PKI provider declares `subject_dn_base: "OU=Services,DC=corp,DC=example,DC=com"`. One corporate CA usually issues to more than one population, and without that constraint a `CN` extractor would authenticate humans as services.
 
-```yaml
-subject_dn_base: "OU=Services,DC=corp,DC=example,DC=com"
-```
-
-One corporate CA almost always issues to more than one population. Without that constraint, a `CN`
-extractor authenticates humans as services.
-
-## Running it
+## How to run
 
 ```bash
-./run.sh pki-authentication
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/quickstart.sh | bash -s pki-authentication
 ```
 
-PKI is not in a released ReadonlyREST yet, so the plugin ships with this repository — you do not need to
-build anything. It sits in `runner/plugins/`, because the Docker build context is `runner/` and
-`ROR_ES_FILE` is a `COPY` source that has to be relative to it.
+From a local clone it is just `./run.sh pki-authentication`.
 
-To refresh it after changing the plugin, rebuild from the `elasticsearch-readonlyrest-plugin` repository
-and copy the result over:
+Access points after startup:
 
-```bash
-./gradlew clean buildRorPlugin '-PesVersion=9.5.0'
-cp es94x/build/distributions/readonlyrest-*_es9.5.0.zip <this-repo>/runner/plugins/
-```
+| Entry point   | URL                      |
+|---------------|--------------------------|
+| Elasticsearch | https://localhost:19200  |
+| Kibana        | https://localhost:15601  |
 
-ES 9.5.0 is what the PKI integration suites were run against. Only the `es94x` module implements PKI so
-far, and it covers ES 9.4.x and 9.5.0.
+## What to explore
 
-Kibana comes up alongside, at <https://localhost:15601>, where `analyst:analyst` can log in. It is there
-to make the point that a browser never presents a client certificate: Kibana authenticates with a
-password on the very same port the services use certificates on. PKI itself is exercised with curl.
+Run these from the example directory. No credential is passed other than the certificate.
 
-> The Elasticsearch plugin is built locally while the Kibana plugin is downloaded, so their ReadonlyREST
-> versions can drift apart. If Kibana cannot talk to Elasticsearch, align them — see [`.env`](.env).
+- Write as `svc-logstash`, authenticated by certificate alone:
+
+  ```bash
+  curl -sk --cert certs/svc-logstash.crt --key certs/svc-logstash.key \
+       -XPOST https://localhost:19200/logs-2026/_doc \
+       -H 'Content-Type: application/json' -d '{"msg":"hello"}'
+  ```
+
+- Read with the same certificate — forbidden, because the `ingest` group only grants writes:
+
+  ```bash
+  curl -sk --cert certs/svc-logstash.crt --key certs/svc-logstash.key https://localhost:19200/logs-2026/_search
+  ```
+
+- Read as `svc-dashboard` — a different certificate, a different group, reads allowed:
+
+  ```bash
+  curl -sk --cert certs/svc-dashboard.crt --key certs/svc-dashboard.key https://localhost:19200/logs-2026/_search
+  ```
+
+- Try `jsmith` — trusted by the same CA, but refused for being outside `subject_dn_base`:
+
+  ```bash
+  curl -sk --cert certs/jsmith.crt --key certs/jsmith.key https://localhost:19200/logs-2026/_search
+  ```
+
+- Send no certificate at all — the request falls through to the password block on the very same port:
+
+  ```bash
+  curl -sk -u analyst:analyst https://localhost:19200/logs-2026/_search
+  ```
+
+- Log in to Kibana as `analyst:analyst`. A browser never presents a client certificate, so Kibana authenticates with a password on the same port the services use certificates on.
 
 ## How it is configured
 
@@ -61,45 +78,28 @@ xpack.security.http.ssl.verification_mode: certificate
 xpack.security.http.ssl.certificate_authorities: [ "ca.crt", "pki-ca.crt" ]
 ```
 
-`optional` rather than `required`, so a caller without a certificate still reaches the ACL and can fall
-through to the password block. `required` would reject it during the handshake instead, and the analyst
-would never get in.
+`optional` rather than `required`, so a caller without a certificate still reaches the ACL and can fall through to the password block. `required` would reject it during the handshake instead, and `analyst` would never get in.
 
 ReadonlyREST turns the certificate into a user ([`confs/readonlyrest.yml`](confs/readonlyrest.yml)):
 
 ```yaml
-  pkis:
-    - name: corporate_pki
-      subject_dn_base: "OU=Services,DC=corp,DC=example,DC=com"
-      issuer_dn: "CN=Corp Issuing CA,DC=corp,DC=example,DC=com"
-      users:
-        user_id_attribute: "CN"
-      groups:
-        group_id_attribute: "OU"
+pkis:
+  - name: corporate_pki
+    subject_dn_base: "OU=Services,DC=corp,DC=example,DC=com"
+    issuer_dn: "CN=Corp Issuing CA,DC=corp,DC=example,DC=com"
+    users:
+      user_id_attribute: "CN"
+    groups:
+      group_id_attribute: "OU"
 ```
 
-The groups it reads are *external* groups, mapped to local ones in the `users` section. Every
-certificate here carries two OUs — `OU=ingest` names a role, `OU=Services` merely places it in the
-corporate tree — and only the role is mapped. The other is discarded, which is why no filtering
-mechanism is needed.
+The groups it reads are *external* groups, mapped to local ones in the `users` section. Every certificate here carries two OUs — `OU=ingest` names a role, `OU=Services` merely places it in the corporate tree — and only the role is mapped. The other is discarded.
 
-## The certificates
+The certificates are generated by [`certs/generate.sh`](certs/generate.sh), which you can rerun. The distinguished names are part of the configuration: change them and `confs/readonlyrest.yml` has to change with them.
 
-Generated by [`certs/generate.sh`](certs/generate.sh), which you can rerun. The distinguished names are
-part of the configuration: change them and `confs/readonlyrest.yml` has to change with them.
+## Things to check in your own cluster
 
-## Three things to check in your own cluster
-
-**TLS must terminate at Elasticsearch.** If a load balancer, ingress or service mesh terminates it
-upstream, no certificate ever reaches the node and PKI rules simply never match. This is the most common
-reason PKI appears not to work.
-
-**Kibana cannot use PKI.** A browser presents no client certificate, so anything reaching Elasticsearch
-through Kibana authenticates as Kibana's own service account. PKI is for services talking to
-Elasticsearch directly; keep a password or SSO path for people.
-
-**Never set `verification_mode: none`.** The node would still ask for a certificate and then validate
-nothing, so anyone able to run a CA could issue one saying `CN=svc-logstash` and be authenticated as
-that service. ReadonlyREST cannot detect this — by the time a rule sees the certificate it looks
-legitimate. `issuer_dn`, as configured above, is the one constraint a forged subject still cannot
-satisfy.
+- **TLS must terminate at Elasticsearch.** If a load balancer, ingress or service mesh terminates it upstream, no certificate ever reaches the node and PKI rules never match. This is the most common reason PKI appears not to work.
+- **Kibana cannot use PKI.** A browser presents no client certificate, so anything reaching Elasticsearch through Kibana authenticates as Kibana's own service account. Keep a password or SSO path for people.
+- **Never set `verification_mode: none`.** The node would still ask for a certificate and then validate nothing, so anyone able to run a CA could issue one saying `CN=svc-logstash` and be authenticated as that service. ReadonlyREST cannot detect this. `issuer_dn` is the one constraint a forged subject still cannot satisfy.
+- **Order your blocks.** If a request carries both a certificate and an `Authorization` header, the first matching block decides the identity. Put password blocks for known service accounts above the PKI blocks.

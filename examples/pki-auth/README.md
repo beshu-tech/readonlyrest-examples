@@ -1,4 +1,4 @@
-# PKI Authentication Example
+# PKI Auth Example
 
 Demonstrates authenticating services by their TLS client certificate: ReadonlyREST derives the username and groups from the certificate, while password-based users share the same port.
 
@@ -18,10 +18,10 @@ The three certificates come from the same CA. None of the services holds a passw
 ## How to run
 
 ```bash
-curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/quickstart.sh | bash -s pki-authentication
+curl -sL https://raw.githubusercontent.com/beshu-tech/readonlyrest-examples/master/quickstart.sh | bash -s pki-auth
 ```
 
-From a local clone it is just `./run.sh pki-authentication`.
+From a local clone it is just `./run.sh pki-auth`.
 
 Access points after startup:
 
@@ -65,6 +65,21 @@ Run these from the example directory. No credential is passed other than the cer
   ```bash
   curl -sk -u analyst:analyst https://localhost:19200/logs-2026/_search
   ```
+
+- Watch a real client do the same thing. A Logstash container ships to `logs-2026` using the `svc-logstash` certificate and no password at all — its config holds no credential other than the certificate ([`confs/logstash.conf`](confs/logstash.conf)). It reports every event it sends:
+
+  ```bash
+  docker logs -f $(docker ps -qf name=logstash)
+  ```
+
+- Watch the data arrive, reading with a *different* certificate. Run this twice a few seconds apart — the count goes up:
+
+  ```bash
+  curl -sk --cert certs/svc-dashboard.crt --key certs/svc-dashboard.key \
+       'https://localhost:19200/logs-2026/_count'
+  ```
+
+  That is the whole point in one line: `svc-logstash` wrote it and cannot read it back, `svc-dashboard` reads it and cannot write, and neither of them holds a password.
 
 - Log in to Kibana as `analyst:analyst`. A browser never presents a client certificate, so Kibana authenticates with a password on the same port the services use certificates on.
 

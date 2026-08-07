@@ -16,9 +16,11 @@ readonlyrest:
       verbosity: error
 
     # Services whose certificate carries the 'ingest' role. No password anywhere.
+    # 'cluster:monitor/main' is what a client library uses to detect the Elasticsearch version when it
+    # connects - Logstash cannot start without it.
     - name: "Ingest services"
       groups: ["ingest"]
-      actions: ["indices:data/write/*", "indices:admin/*"]
+      actions: ["cluster:monitor/main", "indices:data/write/*", "indices:admin/*"]
       indices: ["logs-*"]
 
     # Services whose certificate carries the 'query' role. Read only.

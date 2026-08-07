@@ -36,8 +36,9 @@ new_client() {
 }
 
 echo "==> client certificates"
-# openssl builds the DN in the order given, so OU=Services is written last and ends up
-# rightmost - which is what subject_dn_base matches against
+# openssl appends the RDNs in the order given and a DN prints right to left, so OU=Services - written
+# here *before* OU=ingest - is the one that ends up rightmost, next to the DC components. That suffix
+# is what subject_dn_base matches against, so swapping the two OUs would silently break authentication.
 new_client "svc-logstash"  "${BASE_DN}/OU=Services/OU=ingest/CN=svc-logstash"
 new_client "svc-dashboard" "${BASE_DN}/OU=Services/OU=query/CN=svc-dashboard"
 new_client "jsmith"        "${BASE_DN}/OU=People/OU=ingest/CN=jsmith"

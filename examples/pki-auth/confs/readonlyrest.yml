@@ -2,14 +2,15 @@ readonlyrest:
 
   access_control_rules:
 
-    # The cluster initializer and the health checks come in as this user.
+    # The node health check comes in as this user.
     - name: "ADMIN"
       type: allow
       auth_key: admin:admin
       verbosity: error
 
-    # Kibana's own service account. It authenticates with a password: Kibana is a browser front end and
-    # never presents a client certificate, which is exactly why mixed mode matters.
+    # Kibana's own service account, and the cluster initializer that seeds logs-2026 at startup. Both
+    # authenticate with a password: Kibana is a browser front end and never presents a client
+    # certificate, which is exactly why mixed mode matters.
     - name: "KIBANA"
       type: allow
       auth_key: kibana:kibana
@@ -17,10 +18,11 @@ readonlyrest:
 
     # Services whose certificate carries the 'ingest' role. No password anywhere.
     # 'cluster:monitor/main' is what a client library uses to detect the Elasticsearch version when it
-    # connects - Logstash cannot start without it.
+    # connects - Logstash cannot start without it. Writes and nothing else beyond that: no
+    # 'indices:admin/*', so this certificate cannot delete or reconfigure the index it ships to.
     - name: "Ingest services"
       groups: ["ingest"]
-      actions: ["cluster:monitor/main", "indices:data/write/*", "indices:admin/*"]
+      actions: ["cluster:monitor/main", "indices:data/write/*"]
       indices: ["logs-*"]
 
     # Services whose certificate carries the 'query' role. Read only.

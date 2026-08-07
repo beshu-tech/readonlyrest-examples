@@ -14,6 +14,10 @@ services:
     depends_on:
       es-ror:
         condition: service_healthy
+      # The 'ingest' group is not allowed to create indices, only to write into logs-*, so wait for the
+      # initializer to have created logs-2026 rather than relying on Logstash losing the race.
+      initializer:
+        condition: service_healthy
     environment:
       - XPACK_MONITORING_ENABLED=false
       - LS_JAVA_OPTS=-Xms256m -Xmx256m
@@ -21,8 +25,10 @@ services:
       - ${EXAMPLE_DIR}/confs/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
       - ${EXAMPLE_DIR}/certs/svc-logstash.crt:/certs/svc-logstash.crt:ro
       - ${EXAMPLE_DIR}/certs/svc-logstash.key:/certs/svc-logstash.key:ro
-      # the CA that signed the Elasticsearch server certificate, so Logstash can verify the node it
-      # connects to - the reverse direction to the client certificate above
+      # The CA that signed the Elasticsearch server certificate, so Logstash can verify the node it
+      # connects to - the reverse direction to the client certificate above. That CA belongs to the
+      # runner rather than to this example, and this path is deliberately relative to the Compose
+      # project directory (runner/, where docker-compose.yml lives), not to this file.
       - ./conf/es/ca.crt:/certs/ca.crt:ro
     networks:
       - ror-network

@@ -1,9 +1,6 @@
 # PKI authentication
 
-Services authenticate to Elasticsearch with nothing but their TLS client certificate — no password in a
-`logstash.yml`, no token on disk. ReadonlyREST reads the username and the groups straight out of the
-certificate the client already proved it owns, and a password user shares the same port to show that
-both can coexist.
+Demonstrates authenticating services by their TLS client certificate: ReadonlyREST derives the username and groups from the certificate, while password-based users share the same port.
 
 ## What it shows
 

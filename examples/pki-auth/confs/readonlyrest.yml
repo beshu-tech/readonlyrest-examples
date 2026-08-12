@@ -1,0 +1,66 @@
+readonlyrest:
+
+  access_control_rules:
+
+    # The node health check comes in as this user.
+    - name: "ADMIN"
+      type: allow
+      auth_key: admin:admin
+      verbosity: error
+
+    # Kibana's own service account, and the cluster initializer that seeds logs-2026 at startup. Both
+    # authenticate with a password: Kibana is a browser front end and never presents a client
+    # certificate, which is exactly why mixed mode matters.
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
+    # Services whose certificate carries the 'ingest' role. No password anywhere.
+    # 'cluster:monitor/main' is what a client library uses to detect the Elasticsearch version when it
+    # connects - Logstash cannot start without it. Writes and nothing else beyond that: no
+    # 'indices:admin/*', so this certificate cannot delete or reconfigure the index it ships to.
+    - name: "Ingest services"
+      groups: ["ingest"]
+      actions: ["cluster:monitor/main", "indices:data/write/*"]
+      indices: ["logs-*"]
+
+    # Services whose certificate carries the 'query' role. Read only.
+    - name: "Query services"
+      groups: ["query"]
+      actions: ["indices:data/read/*", "indices:admin/get", "indices:admin/mappings/get"]
+      indices: ["logs-*"]
+
+    # A human on the very same port, in a browser rather than a script. Callers with no certificate fall
+    # through to here, which is what makes mixed mode work.
+    - name: "Analysts"
+      auth_key: analyst:analyst
+      indices: ["logs-*"]
+      kibana:
+        access: ro
+
+  users:
+    - username: "*"
+      groups:
+        # Only the role OUs are mapped. Every certificate also carries OU=Services, which places it in
+        # the corporate tree rather than naming a role - it matches no mapping and is simply discarded.
+        - local_group: { id: "ingest", name: "ingest" }
+          external_group_ids: ["ingest"]
+        - local_group: { id: "query", name: "query" }
+          external_group_ids: ["query"]
+      pki_auth:
+        name: "corporate_pki"
+        groups_any_of: ["ingest", "query"]
+
+  pkis:
+    - name: corporate_pki
+      # The same CA also issues to the People branch; this keeps those certificates out, so a human
+      # certificate cannot authenticate as a service even though the node trusts it.
+      subject_dn_base: "OU=Services,DC=corp,DC=example,DC=com"
+      # Any CA the node trusts could mint a certificate saying CN=svc-logstash. Pinning the issuer is
+      # what stops one of them impersonating a service issued by another.
+      issuer_dn: "CN=Corp Issuing CA,DC=corp,DC=example,DC=com"
+      users:
+        user_id_attribute: "CN"
+      groups:
+        group_id_attribute: "OU"

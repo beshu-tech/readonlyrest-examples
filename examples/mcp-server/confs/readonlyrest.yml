@@ -1,0 +1,46 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+
+    # Scenario A: the MCP server's own service identity.
+    # ROR asks Elasticsearch to validate the API key (ApiKey <base64 id:api_key>
+    # header). Any key that ES considers valid resolves to the single ROR user
+    # "mcp" below — permissions come from this block, not from the key itself.
+    - name: "MCP server (ES API key)"
+      type: allow
+      token_authentication:
+        type: "api-key"
+        username: "mcp"
+      indices: ["logs-*", "orders-*"]
+      actions:
+        - "indices:data/read/*"
+        - "indices:admin/mappings/get"
+        - "indices:monitor/*"
+        - "cluster:monitor/*"
+
+    # Scenario B: per-user identity via Authorization passthrough. When the MCP
+    # server runs in http mode it forwards the client's own Authorization header
+    # to Elasticsearch, so ordinary basic auth reaches ROR unchanged.
+    - name: "Analyst via MCP"
+      type: allow
+      auth_key: analyst:analyst
+      indices: ["logs-*"]
+      actions:
+        - "indices:data/read/*"
+        - "indices:admin/mappings/get"
+        - "indices:monitor/*"
+        - "cluster:monitor/*"
+
+    - name: "Admins"
+      type: allow
+      auth_key: admin:admin
+      kibana:
+        access: admin

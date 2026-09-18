@@ -1,6 +1,8 @@
 #!/bin/bash -ex
 
-set -o pipefail
+# `bash init.sh` (how cluster-initializer invokes this) ignores the shebang
+# flags, so set them here.
+set -exo pipefail
 
 source /usr/local/lib/ror-utils.sh
 

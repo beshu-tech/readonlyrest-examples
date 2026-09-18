@@ -1,23 +1,8 @@
 services:
 
-  # One-shot: mints an ES API key for the MCP server and writes it to the
-  # shared mcp-env volume as a .env file.
-  mcp-initializer:
-    build:
-      context: ${EXAMPLE_DIR}/images/mcp-initializer
-      dockerfile: Dockerfile
-    hostname: mcp-initializer
-    depends_on:
-      es-ror:
-        condition: service_healthy
-    volumes:
-      - mcp-env:/mcp-env
-    networks:
-      - ror-network
-
   # Elastic MCP server for Elasticsearch (elastic/mcp-server-elasticsearch),
-  # in HTTP mode so it can both use its own API key identity and forward a
-  # per-client Authorization header straight through to Elasticsearch/ROR.
+  # in HTTP mode, with no credentials of its own: every client must send its
+  # own Authorization header, which the server forwards to Elasticsearch/ROR.
   mcp-server:
     image: docker.elastic.co/mcp/elasticsearch:${MCP_SERVER_VERSION:-0.4.6}
     hostname: mcp-server
@@ -25,21 +10,21 @@ services:
     # default 127.0.0.1:8080, which is required for the host port mapping
     # below to work.
     command: ["http", "--container-mode"]
-    # dotenvy (the config loader) searches upward from the working directory
-    # for a .env file, so pointing it at the volume mcp-initializer wrote to
-    # is enough to pick up ES_URL / ES_API_KEY / ES_SSL_SKIP_VERIFY.
-    working_dir: /mcp-env
+    environment:
+      # No ES_API_KEY / ES_USERNAME: the server starts unauthenticated and
+      # relies entirely on the caller's forwarded Authorization header.
+      - ES_URL=https://es-ror:9200
+      # The MCP server has no custom-CA option, only an on/off switch, and this
+      # cluster uses a self-signed certificate.
+      - ES_SSL_SKIP_VERIFY=true
+    # Waiting for the initializer (its /tmp/init_done healthcheck) means the
+    # demo indices exist by the time an MCP client can connect.
     depends_on:
-      mcp-initializer:
-        condition: service_completed_successfully
+      initializer:
+        condition: service_healthy
     ports:
       - "18080:8080"
-    volumes:
-      - mcp-env:/mcp-env:ro
     networks:
       - ror-network
     # No healthcheck: the image (wolfi-base + busybox) ships neither curl nor
     # wget, and nothing in this example depends on mcp-server being healthy.
-
-volumes:
-  mcp-env:

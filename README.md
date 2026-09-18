@@ -62,7 +62,7 @@ To stop and clean up:
 | [basic-multitenancy](examples/basic-multitenancy) | Multi-tenancy: isolated Kibana spaces and index access per user |
 | [kibana-reverse-proxy](examples/kibana-reverse-proxy) | Two Kibana nodes behind an Apache HTTPS reverse proxy with sticky-session load balancing, SSL termination, and a configurable base-path rewriting strategy |
 | [fleet](examples/fleet) | Full Elastic Fleet stack: Fleet Server, Elastic Agent with APM, and an instrumented Node.js service, all secured with ReadonlyREST |
-| [mcp-server](examples/mcp-server) | The Elasticsearch MCP server (elastic/mcp-server-elasticsearch) authenticating with an ES API key behind ReadonlyREST |
+| [mcp-server](examples/mcp-server) | The Elasticsearch MCP server (elastic/mcp-server-elasticsearch) behind ReadonlyREST, with each MCP client's own credentials passed through to ROR |
 
 ## Project structure
 

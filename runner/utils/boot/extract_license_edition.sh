@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # Extract 'license.edition' from a ROR_ACTIVATION_KEY
 # Usage: extract_license_edition.sh <rorActivationLicense>
 set -eu

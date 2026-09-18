@@ -28,3 +28,63 @@ services:
       - ror-network
     # No healthcheck: the image (wolfi-base + busybox) ships neither curl nor
     # wget, and nothing in this example depends on mcp-server being healthy.
+
+  # Two opencode (https://opencode.ai) containers, one per MCP user. opencode is
+  # a terminal agent used here purely as an MCP client, so the ACL can be
+  # exercised by a real agent loop instead of by curl. Each container mounts a
+  # config that differs in exactly one thing - the Authorization header it sends
+  # to the MCP server - which is the whole identity story of this example.
+  #
+  # The agent is bring-your-own-model: `/connect` inside the TUI signs in with
+  # whichever provider the user already has. Both containers share the
+  # opencode-auth volume, so signing in once covers both agents.
+  opencode-analyst:
+    build:
+      context: ${EXAMPLE_DIR}/images/opencode
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-OPENCODE_VERSION_NOT_CONFIGURED}
+    container_name: opencode-analyst
+    hostname: opencode-analyst
+    # Keeps a usable TTY for `docker exec -it`.
+    stdin_open: true
+    tty: true
+    depends_on:
+      mcp-server:
+        condition: service_started
+    ports:
+      # Providers that sign in through the browser (OpenAI, GitHub Copilot, ...)
+      # redirect to http://localhost:1455/auth/callback. opencode listens on
+      # [::]:1455 inside the container, so publishing the port is what lets the
+      # redirect from the host's browser actually arrive. Only this container
+      # publishes it - the host port can only be claimed once, and the shared
+      # auth volume means one sign-in is enough for both agents.
+      - "1455:1455"
+    volumes:
+      - ${EXAMPLE_DIR}/confs/opencode-analyst.json:/root/.config/opencode/opencode.json:ro
+      # `./run.sh` recreates containers, so the sign-in has to outlive them.
+      - opencode-auth:/root/.local/share/opencode
+    networks:
+      - ror-network
+
+  opencode-hr:
+    build:
+      context: ${EXAMPLE_DIR}/images/opencode
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-OPENCODE_VERSION_NOT_CONFIGURED}
+    container_name: opencode-hr
+    hostname: opencode-hr
+    stdin_open: true
+    tty: true
+    depends_on:
+      mcp-server:
+        condition: service_started
+    volumes:
+      - ${EXAMPLE_DIR}/confs/opencode-hr.json:/root/.config/opencode/opencode.json:ro
+      - opencode-auth:/root/.local/share/opencode
+    networks:
+      - ror-network
+
+volumes:
+  opencode-auth:

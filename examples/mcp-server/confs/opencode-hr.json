@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-anthropic-auth"],
+  "mcp": {
+    "elasticsearch": {
+      "type": "remote",
+      "url": "http://mcp-server:8080/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Basic aHI6aHI="
+      }
+    }
+  }
+}

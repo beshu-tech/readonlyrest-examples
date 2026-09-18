@@ -7,19 +7,23 @@ Runs the standalone [`elastic/mcp-server-elasticsearch`](https://github.com/elas
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  Docker network (ror-network)                                │
+┌────────────────────────────────────────────────────────────────┐
+│  Docker network (ror-network)                                  │
 │                                                                │
-│  es-ror ─────────────────────────────── kbn-ror               │
+│  es-ror ─────────────────────────────── kbn-ror                │
 │     │                                                          │
-│     ├── initializer (one-shot: seeds logs-*, orders-*,        │
-│     │                hr-salaries-* indices)                   │
+│     ├── initializer (one-shot: seeds logs-*, orders-*,         │
+│     │                hr-salaries-* indices)                    │
 │     │                                                          │
-│     └── mcp-server (elastic/mcp-server-elasticsearch, :8080)  │
+│     └── mcp-server (elastic/mcp-server-elasticsearch, :8080)   │
 │              ▲                                                 │
 │              │ Authorization: Basic ... (forwarded unchanged)  │
-│           MCP client (Claude Code, curl, ...)                 │
-└──────────────────────────────────────────────────────────────┘
+│              ├── opencode-analyst   sends analyst:analyst      │
+│              ├── opencode-hr        sends hr:hr                │
+│              │                                                 │
+└──────────────┼─────────────────────────────────────────────────┘
+               │
+            MCP client on the host (any MCP client, curl, ...)
 ```
 
 ## Exposed ports
@@ -28,13 +32,17 @@ Runs the standalone [`elastic/mcp-server-elasticsearch`](https://github.com/elas
 |------------|-----------|---------------------------------------|
 | Kibana     | 15601     | ReadonlyREST Kibana UI                |
 | MCP server | 18080     | Elasticsearch MCP server (`/mcp`, `/ping`) |
+| opencode   | 1455      | OAuth redirect target for browser sign-ins inside `opencode-analyst` |
 
 ## Users
 
-| Username  | Password  | Role                                                          |
+| Username  | Password  | Reaches                                                         |
 |-----------|-----------|-----------------------------------------------------------------|
-| `analyst` | `analyst` | Read-only MCP access to `logs-*` only                           |
-| `admin`   | `admin`   | Kibana admin, unrestricted — useful as a contrast through MCP    |
+| `analyst` | `analyst` | `logs-*` and `orders-*`, through MCP and in Kibana (read-only)   |
+| `hr`      | `hr`      | `hr-salaries-*` and `orders-*`, same access in both             |
+| `admin`   | `admin`   | Kibana admin, unrestricted - useful as a contrast through MCP   |
+
+`orders-*` is the shared ground; each user also has one index pattern the other cannot see at all — in Kibana's Discover exactly as through an MCP tool call, since it is one ACL either way.
 
 ## How it works
 
@@ -44,7 +52,10 @@ Runs the standalone [`elastic/mcp-server-elasticsearch`](https://github.com/elas
 Elasticsearch starts with `xpack.security` TLS enabled and the ReadonlyREST plugin loaded. `readonlyrest.yml` defines three ACL blocks:
 
 - **KIBANA** — allows Kibana's internal user (`kibana:kibana`) unrestricted access for its own saved objects and system indices.
-- **Analyst via MCP** — ordinary `auth_key: analyst:analyst` basic auth, scoped to `logs-*` and a read-only action set. Nothing in this block is MCP-specific: it is a plain ROR user, and that is the whole point — the MCP server adds no identity of its own.
+- **Logs analyst via MCP** — ordinary `auth_key: analyst:analyst` basic auth, scoped to `logs-*` + `orders-*` with `kibana: {access: ro}`.
+- **HR analyst via MCP** — the same shape with `auth_key: hr:hr`, scoped to `hr-salaries-*` + `orders-*`. Nothing in either block is MCP-specific: they are plain ROR users who can equally log into Kibana, and that is the whole point — the MCP server adds no identity of its own.
+
+  `kibana: {access: ro}` does the work an explicit `actions:` list used to: it admits the read-only action set (which covers all five MCP tools) plus the Kibana-internal calls a browser session needs, and refuses writes — a saved-object `POST` as `analyst` comes back `403 Forbidden by ReadonlyREST`. An explicit `actions:` list instead of it would let the MCP tools through but leave Kibana unusable.
 - **Admins** — `admin:admin`, unrestricted.
 
 </details>
@@ -52,7 +63,7 @@ Elasticsearch starts with `xpack.security` TLS enabled and the ReadonlyREST plug
 <details>
 <summary>Step 2 — Demo data is seeded</summary>
 
-The shared `initializer` container runs `scripts/init.sh`, creating `logs-2026` (50 generated log lines), `orders-2026` (a handful of orders), and `hr-salaries-2026` (salary data). Only `logs-2026` is inside `analyst`'s `indices` scope — the other two are there to prove ROR blocks them.
+The shared `initializer` container runs `scripts/init.sh`, creating `logs-2026` (50 generated log lines), `orders-2026` (a handful of orders), and `hr-salaries-2026` (salary data). `logs-2026` belongs to `analyst`, `hr-salaries-2026` to `hr`, and `orders-2026` to both — so the same MCP server answers two agents differently.
 
 > The index is named `logs-2026`, not `logs-app-2026` — Elasticsearch ships a built-in `logs-*-*` index template that forces any two-hyphen `logs-`-prefixed name into a data stream, so a plain index create call 400s on a name with two segments after `logs-`.
 
@@ -63,22 +74,69 @@ The shared `initializer` container runs `scripts/init.sh`, creating `logs-2026` 
 
 Once `initializer` reports healthy (its `/tmp/init_done` healthcheck, which only passes after `init.sh` returns), `mcp-server` runs `docker.elastic.co/mcp/elasticsearch` in `http --container-mode` mode with only two settings: `ES_URL=https://es-ror:9200` and `ES_SSL_SKIP_VERIFY=true` (the MCP server has no custom-CA option, only an on/off switch, and this cluster uses a self-signed certificate). It listens on `:8080` (mapped to host `18080`), exposing `/mcp` (Streamable HTTP, no `initialize` call required first) and `/ping` (health check).
 
-No `ES_API_KEY` or username/password is configured, so in `http` mode the server has nothing to fall back on: it forwards the request's own `Authorization` header to Elasticsearch, and a client that sends none gets a ROR 401.
+No `ES_API_KEY` or username/password is configured, so in `http` mode the server has nothing to fall back on: it forwards the request's own `Authorization` header to Elasticsearch, and a client that sends none is rejected by ROR with a 403.
 
 </details>
 
-## Connect an MCP client
+## Connect your own MCP client
 
-```bash
-claude mcp add --transport http elasticsearch-analyst http://localhost:18080/mcp \
-  --header "Authorization: Basic $(printf 'analyst:analyst' | base64)"
+The endpoint is plain Streamable HTTP at `http://localhost:18080/mcp`; any MCP client works, as long as it can set a header. The generic shape is one remote server plus one `Authorization` header:
+
+```json
+{
+  "url": "http://localhost:18080/mcp",
+  "headers": { "Authorization": "Basic YW5hbHlzdDphbmFseXN0" }
+}
 ```
 
-`analyst` can only see `logs-*`. Point a second connection at the same endpoint with `admin:admin` credentials and it sees everything — same server, same tools, different ROR block.
+The headers for the two MCP users: `Basic YW5hbHlzdDphbmFseXN0` (`analyst:analyst`) and `Basic aHI6aHI=` (`hr:hr`) — `printf 'analyst:analyst' | base64` if you want to check.
+
+Swap the header for `admin:admin`'s and the same server, with the same tools, returns everything — a different ROR block, not a different endpoint. The example also ships two preconfigured clients; see below.
+
+## Drive it with two agents
+
+The example ships two [opencode](https://opencode.ai) containers - a terminal agent used here purely as an MCP client, so the ACL can be exercised by a real agent loop instead of by `curl`. They are identical except for one line of config, the `Authorization` header they send:
+
+| Container | Sends | Reaches |
+|---|---|---|
+| `opencode-analyst` | `Basic YW5hbHlzdDphbmFseXN0` (`analyst:analyst`) | `logs-*`, `orders-*` |
+| `opencode-hr` | `Basic aHI6aHI=` (`hr:hr`) | `hr-salaries-*`, `orders-*` |
+
+```bash
+docker exec -it opencode-analyst opencode     # in one terminal
+docker exec -it opencode-hr opencode          # in another
+```
+
+### Signing in (bring your own model)
+
+The containers hold no model credentials. Run `/connect` in the TUI and pick **any provider opencode supports** — the credentials land in the shared `opencode-auth` volume, so signing in once covers both agents, and `./run.sh`'s container recreation does not log you out.
+
+| Sign-in style | Works in the container |
+|---|---|
+| Paste an API key (any provider) | Yes, nothing else needed |
+| Browser sign-in that redirects to `localhost:1455` (OpenAI, ...) | Yes — `opencode-analyst` publishes port 1455, so the redirect from your browser reaches the listener inside the container. Sign in from **that** container; the other one picks the credentials up from the shared volume. |
+| Device-code flow (GitHub Copilot: open a URL, type a code) | Yes, no ports involved |
+| Code-paste flow (Anthropic Claude Pro/Max: open a URL, paste the code back) | Yes — it needs the `opencode-anthropic-auth` plugin, which is baked into the image and declared under `plugin` in the configs |
+
+Only one container can claim host port 1455, which is why the browser flow has a designated container rather than working from either.
+
+### What to ask them
+
+Ask both agents the same three things and compare:
+
+1. *"which indices can you see?"* — `analyst` sees `logs-2026` and `orders-2026`; `hr` sees `hr-salaries-2026` and `orders-2026`.
+2. *"summarise orders-2026"* — both succeed. Shared ground.
+3. *"read hr-salaries-2026"* — `hr` reads it; `analyst` gets Elasticsearch's own `index_not_found_exception`. ROR rewrites an out-of-scope index name instead of returning a denial, so the agent usually reports the index does not exist rather than "I was blocked". Mirror it with *"read logs-2026"* to see `hr` blocked the same way.
+
+Then open Kibana as `admin:admin` and look at the ROR audit index: every tool call is attributed to `analyst` or `hr`, never to a shared service account.
+
+### Changing what an agent is
+
+Edit the header in `confs/opencode-analyst.json` / `confs/opencode-hr.json` and `docker restart opencode-analyst`. `admin:admin` is `Basic YWRtaW46YWRtaW4=` if you want an agent with no restrictions for contrast. `opencode mcp add` cannot do this from inside the container — it writes to the global config, which is mounted read-only on purpose so the example's configs do not drift.
 
 ## Tool compatibility
 
-All 5 tools were exercised against a live `./run.sh mcp-server` cluster, in scope (`logs-2026`) and out of scope (`hr-salaries-2026`):
+All 5 tools were exercised against a live `./run.sh mcp-server` cluster as `analyst`, in scope (`logs-2026`) and out of scope (`hr-salaries-2026`):
 
 | Tool           | ES request                          | ROR actions required                                                      | In scope (`logs-2026`) | Out of scope (`hr-salaries-2026`) |
 |----------------|--------------------------------------|------------------------------------------------------------------------------|--------|--------|
@@ -97,15 +155,16 @@ For every REST-style call above, ROR doesn't hand back a plain 403 for an index 
 The MCP server can also carry a credential of its own (`ES_API_KEY`), and ROR validates such keys with `token_authentication: {type: "api-key"}` — the same mechanism it uses for [Elastic Fleet](https://docs.readonlyrest.com/elasticsearch/fleet). This example deliberately doesn't:
 
 - **Every valid API key resolves to the same ROR user.** An API key is a service identity to ROR, not a per-user identity — you cannot give key A and key B different index permissions with `token_authentication` alone.
-- A configured key is also a *fallback*: any client that reaches the MCP port without an `Authorization` header would silently inherit the server's identity. With no key configured, unauthenticated clients get a 401 instead.
+- A configured key is also a *fallback*: any client that reaches the MCP port without an `Authorization` header would silently inherit the server's identity. With no key configured, unauthenticated clients get a 403 instead.
 - Passthrough keeps ROR's audit log meaningful — each MCP call is attributed to the real user, not to one shared `mcp` account.
 
 ## What to explore
 
-- Ask the agent to list indices, then to search `hr-salaries-2026` directly — both are refused; check `runner/ror-cluster.log` for the ROR audit entries.
-- Add a second MCP connection with `admin:admin` and compare what each one can see.
-- Run an ES|QL query (`esql` tool) against `logs-2026` and against `hr-salaries-2026`.
-- Drop the `Authorization` header entirely and watch ROR reject the call with a 401.
+- Ask `opencode-analyst` to read `hr-salaries-2026` and `opencode-hr` to read `logs-2026` — both are refused, each for its own index; check the ROR audit index for the two identities.
+- Log into Kibana as `analyst` and again as `hr`: the same ACL that shapes the agents' tool calls shapes Discover's index list. Writes are refused (`ro`), so saving a search fails on purpose.
+- Point a third MCP connection at the same endpoint with `admin:admin` and compare what it sees.
+- Run an ES|QL query (`esql` tool) against an in-scope and an out-of-scope index and note the different error shape (400 rather than 404).
+- Drop the `Authorization` header entirely and watch ROR reject the call with a 403.
 
 ## How to run
 

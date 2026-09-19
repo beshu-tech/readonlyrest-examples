@@ -59,7 +59,7 @@ services:
       # redirect from the host's browser actually arrive. Only this container
       # publishes it - the host port can only be claimed once, and the shared
       # auth volume means one sign-in is enough for both agents.
-      - "1455:1455"
+      - "127.0.0.1:1455:1455"
     volumes:
       - ${EXAMPLE_DIR}/confs/opencode-analyst.json:/root/.config/opencode/opencode.json:ro
       # `./run.sh` recreates containers, so the sign-in has to outlive them.

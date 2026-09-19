@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-anthropic-auth"],
+  "plugin": ["opencode-anthropic-auth@0.0.13"],
   "mcp": {
     "elasticsearch": {
       "type": "remote",

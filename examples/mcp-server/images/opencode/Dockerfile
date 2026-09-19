@@ -14,7 +14,7 @@ RUN apt-get update \
 # being downloaded while the user waits at the login prompt. The config written
 # here is only the prewarm trigger - at runtime the example mounts its own.
 RUN mkdir -p /root/.config/opencode \
- && echo '{"plugin":["opencode-anthropic-auth"]}' > /root/.config/opencode/opencode.json \
+ && echo '{"plugin":["opencode-anthropic-auth@0.0.13"]}' > /root/.config/opencode/opencode.json \
  && opencode models > /dev/null \
  && rm /root/.config/opencode/opencode.json
 

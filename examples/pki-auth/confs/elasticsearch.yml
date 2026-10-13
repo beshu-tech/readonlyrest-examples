@@ -1,0 +1,31 @@
+network.host: 0.0.0.0
+
+path.repo: /tmp/repositories
+
+cluster.max_shards_per_node: 10000
+
+# TLS terminated by X-Pack, which is the recommended arrangement for new deployments and the one
+# ReadonlyREST's PKI support targets first.
+xpack.security.enabled: true
+
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: elasticsearch.key
+xpack.security.http.ssl.certificate: elasticsearch.crt
+
+# Both CAs: the runner's, which issued this node's own certificate, and the one that issued the client
+# certificates in ./certs. Without the second, the node will not trust the services.
+xpack.security.http.ssl.certificate_authorities: [ "ca.crt", "pki-ca.crt" ]
+
+# 'optional', not 'required': a caller without a certificate still has to reach the ACL so it can fall
+# through to the password block. 'required' would reject it during the handshake instead.
+xpack.security.http.ssl.client_authentication: optional
+
+# ⚠️ 'certificate', never 'none'. With 'none' the node asks for a certificate and validates nothing, so
+# anyone able to run a CA could issue one saying CN=svc-logstash and be authenticated as that service.
+xpack.security.http.ssl.verification_mode: certificate
+
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: elasticsearch.key
+xpack.security.transport.ssl.certificate: elasticsearch.crt
+xpack.security.transport.ssl.certificate_authorities: ca.crt
+xpack.security.transport.ssl.verification_mode: certificate

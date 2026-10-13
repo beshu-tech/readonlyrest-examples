@@ -1,0 +1,11 @@
+echo -e "ReadonlyREST AI/MCP API keys example is running."
+echo -e ""
+echo -e "Elasticsearch:  https://localhost:19200"
+echo -e "Kibana:         https://localhost:15601"
+echo -e ""
+echo -e "Local users (simulated identity provider users):"
+echo -e "  alice:alice  → read access to alice-logs"
+echo -e "  bob:bob      → read access to bob-logs"
+echo -e "  admin:admin  → full admin access"
+echo -e ""
+bash "${EXAMPLE_DIR}/scripts/demo.sh" || true

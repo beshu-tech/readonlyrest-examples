@@ -1,0 +1,90 @@
+services:
+
+  # Elastic MCP server for Elasticsearch (elastic/mcp-server-elasticsearch),
+  # in HTTP mode, with no credentials of its own: every client must send its
+  # own Authorization header, which the server forwards to Elasticsearch/ROR.
+  mcp-server:
+    image: docker.elastic.co/mcp/elasticsearch:${MCP_SERVER_VERSION:-0.4.6}
+    hostname: mcp-server
+    # --container-mode makes the server listen on 0.0.0.0:8080 instead of the
+    # default 127.0.0.1:8080, which is required for the host port mapping
+    # below to work.
+    command: ["http", "--container-mode"]
+    environment:
+      # No ES_API_KEY / ES_USERNAME: the server starts unauthenticated and
+      # relies entirely on the caller's forwarded Authorization header.
+      - ES_URL=https://es-ror:9200
+      # The MCP server has no custom-CA option, only an on/off switch, and this
+      # cluster uses a self-signed certificate.
+      - ES_SSL_SKIP_VERIFY=true
+    # Waiting for the initializer (its /tmp/init_done healthcheck) means the
+    # demo indices exist by the time an MCP client can connect.
+    depends_on:
+      initializer:
+        condition: service_healthy
+    ports:
+      - "18080:8080"
+    networks:
+      - ror-network
+    # No healthcheck: the image (wolfi-base + busybox) ships neither curl nor
+    # wget, and nothing in this example depends on mcp-server being healthy.
+
+  # Two opencode (https://opencode.ai) containers, one per MCP user. opencode is
+  # a terminal agent used here purely as an MCP client, so the ACL can be
+  # exercised by a real agent loop instead of by curl. Each container mounts a
+  # config that differs in exactly one thing - the Authorization header it sends
+  # to the MCP server - which is the whole identity story of this example.
+  #
+  # The agent is bring-your-own-model: `/connect` inside the TUI signs in with
+  # whichever provider the user already has. Both containers share the
+  # opencode-auth volume, so signing in once covers both agents.
+  opencode-analyst:
+    build:
+      context: ${EXAMPLE_DIR}/images/opencode
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-OPENCODE_VERSION_NOT_CONFIGURED}
+    container_name: opencode-analyst
+    hostname: opencode-analyst
+    # Keeps a usable TTY for `docker exec -it`.
+    stdin_open: true
+    tty: true
+    depends_on:
+      mcp-server:
+        condition: service_started
+    ports:
+      # Providers that sign in through the browser (OpenAI, GitHub Copilot, ...)
+      # redirect to http://localhost:1455/auth/callback. opencode listens on
+      # [::]:1455 inside the container, so publishing the port is what lets the
+      # redirect from the host's browser actually arrive. Only this container
+      # publishes it - the host port can only be claimed once, and the shared
+      # auth volume means one sign-in is enough for both agents.
+      - "127.0.0.1:1455:1455"
+    volumes:
+      - ${EXAMPLE_DIR}/confs/opencode-analyst.json:/root/.config/opencode/opencode.json:ro
+      # `./run.sh` recreates containers, so the sign-in has to outlive them.
+      - opencode-auth:/root/.local/share/opencode
+    networks:
+      - ror-network
+
+  opencode-hr:
+    build:
+      context: ${EXAMPLE_DIR}/images/opencode
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-OPENCODE_VERSION_NOT_CONFIGURED}
+    container_name: opencode-hr
+    hostname: opencode-hr
+    stdin_open: true
+    tty: true
+    depends_on:
+      mcp-server:
+        condition: service_started
+    volumes:
+      - ${EXAMPLE_DIR}/confs/opencode-hr.json:/root/.config/opencode/opencode.json:ro
+      - opencode-auth:/root/.local/share/opencode
+    networks:
+      - ror-network
+
+volumes:
+  opencode-auth:

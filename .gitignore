@@ -4,3 +4,4 @@
 **/subst-xpack
 runner/.env
 runner/.current-example
+.claude

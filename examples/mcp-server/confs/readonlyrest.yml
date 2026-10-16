@@ -1,0 +1,35 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
+    - name: "Admins"
+      type: allow
+      auth_key: admin:admin
+      kibana:
+        access: admin
+
+    # Two MCP users, each with a private index pattern and one they share:
+    # whatever an agent is told, ROR is what decides which of the two it is
+    # talking as, and what that user can reach.
+    - name: "Logs analyst via MCP"
+      type: allow
+      auth_key: analyst:analyst
+      indices: ["logs-*", "orders-*"]
+      kibana:
+        access: ro
+
+    - name: "HR analyst via MCP"
+      type: allow
+      auth_key: hr:hr
+      indices: ["hr-salaries-*", "orders-*"]
+      kibana:
+        access: ro

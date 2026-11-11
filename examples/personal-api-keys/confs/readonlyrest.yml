@@ -1,0 +1,77 @@
+readonlyrest:
+
+  global_settings:
+    # These users manage all API keys. Each other user manages only own API keys.
+    # Kibana is on the list, because Kibana can invalidate the API keys of other users (for example, Fleet unenrollment).
+    api_key_admins: ["kibana", "admin"]
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "KIBANA"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
+    - name: "Admins"
+      type: allow
+      auth_key: admin:admin
+      kibana:
+        access: admin
+
+    # An LDAP user in "ai-users" can create, list, update and revoke own API keys.
+    # ROR writes the user ID to the metadata of each new key (metadata._ror.owner).
+    - name: "Manage own API keys"
+      type: allow
+      ldap_authentication: "ldap1"
+      ldap_authorization: { name: "ldap1", groups_any_of: ["ai-users"] }
+      actions: ["cluster:admin/xpack/security/api_key/create",
+                "cluster:admin/xpack/security/api_key/invalidate",
+                "cluster:admin/xpack/security/api_key/get",
+                "cluster:admin/xpack/security/api_key/update"]
+
+    # No username: a request with an API key runs as the owner of the key.
+    # ldap_authorization reads the current groups of the owner. Thus, when the
+    # groups of the owner change, the access of the key changes too.
+    - name: "banana - API key"
+      type: allow
+      token_authentication:
+        type: "api-key"
+      ldap_authorization: { name: "ldap1", groups_any_of: ["readAccessToIndex-banana"] }
+      indices: ["logstash-banana-*"]
+      actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
+
+    - name: "apple - API key"
+      type: allow
+      token_authentication:
+        type: "api-key"
+      ldap_authorization: { name: "ldap1", groups_any_of: ["readAccessToIndex-apple"] }
+      indices: ["logstash-apple-*"]
+      actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
+
+    # alice and bob use Kibana, and manage own keys on Stack Management > Security > API keys.
+    # The kibana rule allows the API key actions. Thus a block that forbids them must come before this block.
+    - name: "Kibana - ai-users"
+      type: allow
+      ldap_auth: { name: "ldap1", groups_any_of: ["ai-users"] }
+      kibana:
+        access: rw
+
+  ldaps:
+    - name: ldap1
+      host: "ldap"
+      port: 389
+      ssl_enabled: false
+      bind_dn: "cn=admin,dc=example,dc=com"
+      bind_password: "admin"
+      # A short cache, so that the demo shows a group change after a few seconds
+      cache_ttl: 5s
+      users:
+        search_user_base_DN: "ou=People,dc=example,dc=com"
+        user_id_attribute: "uid"
+      groups:
+        search_groups_base_DN: "ou=Groups,dc=example,dc=com"
+        unique_member_attribute: "uniqueMember"

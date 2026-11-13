@@ -11,7 +11,6 @@ readonlyrest:
       auth_key: kibana:kibana
       verbosity: error
 
-    # The example runner checks the health of ES and Kibana with this user. Read-only access is enough.
     - name: "Runner health checks"
       type: allow
       auth_key: admin:admin
@@ -20,28 +19,36 @@ readonlyrest:
 
     - name: "Kibana admins"
       type: allow
-      ldap_auth: { name: "ldap1", groups_any_of: ["kibana-admins"] }
       kibana:
         access: admin
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-admins"]
 
     - name: "Kibana users"
       type: allow
-      ldap_auth: { name: "ldap1", groups_any_of: ["kibana-users"] }
       kibana:
         access: rw
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-users"]
 
     - name: "Kibana viewers"
       type: allow
-      ldap_auth: { name: "ldap1", groups_any_of: ["kibana-viewers"] }
       kibana:
         access: ro
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: [ "kibana-viewers" ]
 
     # No username: the request runs as the owner of the key, with the current groups of the owner
     - name: "sales - API key"
       type: allow
       token_authentication:
         type: "api-key"
-      ldap_authorization: { name: "ldap1", groups_any_of: ["sales-readers"] }
+      ldap_authorization:
+        name: "ldap1"
+        groups_any_of: ["sales-readers"]
       indices: ["logstash-sales-*"]
       actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
 
@@ -49,7 +56,9 @@ readonlyrest:
       type: allow
       token_authentication:
         type: "api-key"
-      ldap_authorization: { name: "ldap1", groups_any_of: ["finance-readers"] }
+      ldap_authorization:
+        name: "ldap1"
+        groups_any_of: ["finance-readers"]
       indices: ["logstash-finance-*"]
       actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
 
@@ -60,11 +69,10 @@ readonlyrest:
       ssl_enabled: false
       bind_dn: "cn=admin,dc=example,dc=com"
       bind_password: "admin"
-      # Short, so that the demo shows a group change after a few seconds
-      cache_ttl: 5s
       users:
         search_user_base_DN: "ou=People,dc=example,dc=com"
         user_id_attribute: "uid"
       groups:
         search_groups_base_DN: "ou=Groups,dc=example,dc=com"
         unique_member_attribute: "uniqueMember"
+      cache_ttl: 5s

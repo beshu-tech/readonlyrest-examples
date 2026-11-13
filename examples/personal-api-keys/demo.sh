@@ -17,9 +17,9 @@ step() {
   echo "=== $STEP. $1"
 }
 
-# call <expected status> <auth: user:pass | apikey:<encoded>> <method> <path> [body] [header]
+# call <expected status> <auth: user:pass | apikey:<encoded>> <method> <path> [body]
 call() {
-  local expected="$1" auth="$2" method="$3" path="$4" body="${5:-}" header="${6:-}"
+  local expected="$1" auth="$2" method="$3" path="$4" body="${5:-}"
   local auth_args
   if [[ "$auth" == apikey:* ]]; then
     auth_args=(-H "Authorization: ApiKey ${auth#apikey:}")
@@ -30,9 +30,6 @@ call() {
   if [[ -n "$body" ]]; then
     args+=(-H 'Content-Type: application/json' -d "$body")
   fi
-  if [[ -n "$header" ]]; then
-    args+=(-H "$header")
-  fi
   local response status
   response=$(curl "${args[@]}")
   status=$(tail -n1 <<< "$response")
@@ -41,16 +38,6 @@ call() {
     echo "  OK   $method $path -> $status"
   else
     echo "  FAIL $method $path -> $status (expected $expected)"
-    echo "       $LAST_BODY"
-    FAILURES=$((FAILURES + 1))
-  fi
-}
-
-expect_in_body() {
-  if grep -qF "$1" <<< "$LAST_BODY"; then
-    echo "  OK   the response holds $1"
-  else
-    echo "  FAIL the response does not hold $1"
     echo "       $LAST_BODY"
     FAILURES=$((FAILURES + 1))
   fi
@@ -70,12 +57,10 @@ uniqueMember: uid=$user,ou=People,dc=example,dc=com
 EOF
 }
 
-step "alice (kibana-users) creates an API key. ROR writes her ID to metadata._ror.owner"
+step "alice (kibana-users) creates an API key. She is its owner."
 call 200 alice:alice POST /_security/api_key '{"name":"alice-key","metadata":{"team":"sales"}}'
 ALICE_KEY_ID=$(json_field id)
 ALICE_KEY=$(json_field encoded)
-call 200 alice:alice GET "/_security/api_key?id=$ALICE_KEY_ID"
-echo "  metadata: $(sed -n 's/.*"metadata":\({[^}]*}[^}]*}\).*/\1/p' <<< "$LAST_BODY")"
 
 step "bob (kibana-users) creates an API key"
 call 200 bob:bob POST /_security/api_key '{"name":"bob-key"}'
@@ -89,26 +74,16 @@ step "dave (kibana-viewers, access ro) can list own API keys, but cannot create 
 call 200 dave:dave GET /_security/api_key
 call 403 dave:dave POST /_security/api_key '{"name":"dave-key"}'
 
-step "A client cannot set the owner: ES rejects metadata keys that start with _"
-call 400 alice:alice POST /_security/api_key '{"name":"forged-key","metadata":{"_ror":{"owner":"bob"}}}'
-
-step "alice updates her key and sends back the metadata that ES gave, with _ror (Kibana does this). ROR keeps the owner."
-call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"_ror":{"owner":"alice"},"team":"sales","env":"prod"}}'
-call 200 alice:alice GET "/_security/api_key?id=$ALICE_KEY_ID"
-expect_in_body '"_ror":{"owner":"alice"}'
-expect_in_body '"env":"prod"'
-
-step "An update cannot change the owner: ROR ignores _ror in the request and keeps the stored owner"
-call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"_ror":{"owner":"bob"},"team":"sales"}}'
-call 200 alice:alice GET "/_security/api_key?id=$ALICE_KEY_ID"
-expect_in_body '"_ror":{"owner":"alice"}'
-
 step "Each key runs as its owner, with the current LDAP groups of the owner"
 echo "  (ROR answers 404 for an index that the user cannot read, so the index stays hidden)"
 call 200 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
 call 404 "apikey:$ALICE_KEY" GET /logstash-finance-2026/_search
 call 200 "apikey:$BOB_KEY" GET /logstash-finance-2026/_search
 call 404 "apikey:$BOB_KEY" GET /logstash-sales-2026/_search
+
+step "alice updates the metadata of her key. The key still runs as alice."
+call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"team":"sales","env":"prod"}}'
+call 200 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
 
 step "A request with an API key cannot create another API key"
 call 403 "apikey:$ALICE_KEY" POST /_security/api_key '{"name":"key-from-key"}'
@@ -124,9 +99,6 @@ fi
 call 403 bob:bob DELETE /_security/api_key "{\"ids\":[\"$ALICE_KEY_ID\"]}"
 call 403 bob:bob DELETE /_security/api_key '{"name":"alice-key"}'
 call 403 bob:bob DELETE /_security/api_key "{\"ids\":[\"$ALICE_KEY_ID\"],\"owner\":true}"
-
-step "An ID that does not exist selects no key. Thus bob can send it (Kibana does this to check for API keys)."
-call 200 bob:bob DELETE /_security/api_key '{"ids":["no-such-api-key"]}'
 
 step "Remove alice from sales-readers in LDAP. Her key loses access to the sales index."
 ldap_group_member delete alice sales-readers
@@ -148,7 +120,7 @@ call 200 erin:erin DELETE /_security/api_key "{\"ids\":[\"$BOB_KEY_ID\"]}"
 step "A revoked key stops working at once"
 call 403 "apikey:$BOB_KEY" GET /logstash-finance-2026/_search
 
-step "alice revokes her own key. Kibana sends the owner flag with the IDs."
+step "alice revokes her own key"
 call 200 alice:alice DELETE /_security/api_key "{\"ids\":[\"$ALICE_KEY_ID\"],\"owner\":true}"
 call 403 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
 

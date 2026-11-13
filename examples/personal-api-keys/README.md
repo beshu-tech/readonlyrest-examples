@@ -4,7 +4,7 @@ A user creates an Elasticsearch API key, and each request with the key runs as t
 
 Users manage their keys with the Elasticsearch API or on the Kibana page **Stack Management → Security → API keys**.
 
-> Both ROR plugins in this example are pre-release builds: Elasticsearch `1.74.0-pre2` and Kibana `1.74.0-pre1`. Build them before you run the example (see [Build the ROR plugins](#build-the-ror-plugins)).
+> Both ROR plugins in this example are pre-release builds: Elasticsearch `1.74.0-pre2` and Kibana `1.74.0-pre1`. They ship with this repository in `runner/plugins/` (see [Rebuild the ROR plugins](#rebuild-the-ror-plugins)).
 
 ## Architecture
 
@@ -121,25 +121,6 @@ Try it:
 
 ## Run the example
 
-### Build the ROR plugins
-
-In the `elasticsearch-readonlyrest-plugin` repository, on the branch with personal API keys:
-
-```bash
-./gradlew clean buildRorPlugin -PesVersion=9.5.6
-mkdir -p <readonlyrest-examples>/runner/ror-builds
-cp es94x/build/distributions/readonlyrest-1.74.0-pre2_es9.5.6.zip <readonlyrest-examples>/runner/ror-builds/
-```
-
-In the `readonlyrest_kbn` repository, on the branch with the API keys page:
-
-```bash
-yarn gulp --es_version=9.5.6
-cp build/readonlyrest_kbn_universal-1.74.0-pre1_es9.5.6.zip <readonlyrest-examples>/runner/ror-builds/
-```
-
-The `runner/` directory is the Docker build context. Thus the zips must be in `runner/ror-builds/` (Git ignores this directory). If the version of a build is different, change `ROR_ES_FILE` or `ROR_KBN_FILE` in [`.env`](.env).
-
 ### Start the stack
 
 ```bash
@@ -180,3 +161,21 @@ The LDAP connector caches the groups for 5 seconds (`cache_ttl` in `confs/readon
 ```bash
 ./clean.sh
 ```
+
+### Rebuild the ROR plugins
+
+In the `elasticsearch-readonlyrest-plugin` repository, on the branch with personal API keys:
+
+```bash
+./gradlew clean buildRorPlugin -PesVersion=9.5.6
+cp es94x/build/distributions/readonlyrest-1.74.0-pre2_es9.5.6.zip <readonlyrest-examples>/runner/plugins/
+```
+
+In the `readonlyrest_kbn` repository, on the branch with the API keys page:
+
+```bash
+yarn gulp --es_version=9.5.6
+cp build/readonlyrest_kbn_universal-1.74.0-pre1_es9.5.6.zip <readonlyrest-examples>/runner/plugins/
+```
+
+The `runner/` directory is the Docker build context. Thus the zips must be in `runner/plugins/`. If the version of a build is different, change `ROR_ES_FILE` or `ROR_KBN_FILE` in [`.env`](.env).

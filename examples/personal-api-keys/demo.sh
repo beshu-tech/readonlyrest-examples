@@ -70,41 +70,45 @@ uniqueMember: uid=$user,ou=People,dc=example,dc=com
 EOF
 }
 
-step "alice (ai-users) creates an API key. ROR writes her ID to metadata._ror.owner"
-call 200 alice:alice POST /_security/api_key '{"name":"alice-key","metadata":{"team":"fruit"}}'
+step "alice (kibana-users) creates an API key. ROR writes her ID to metadata._ror.owner"
+call 200 alice:alice POST /_security/api_key '{"name":"alice-key","metadata":{"team":"sales"}}'
 ALICE_KEY_ID=$(json_field id)
 ALICE_KEY=$(json_field encoded)
 call 200 alice:alice GET "/_security/api_key?id=$ALICE_KEY_ID"
 echo "  metadata: $(sed -n 's/.*"metadata":\({[^}]*}[^}]*}\).*/\1/p' <<< "$LAST_BODY")"
 
-step "bob (ai-users) creates an API key"
+step "bob (kibana-users) creates an API key"
 call 200 bob:bob POST /_security/api_key '{"name":"bob-key"}'
 BOB_KEY_ID=$(json_field id)
 BOB_KEY=$(json_field encoded)
 
-step "carol (not in ai-users) cannot create an API key"
+step "carol (in no Kibana group) cannot create an API key"
 call 403 carol:carol POST /_security/api_key '{"name":"carol-key"}'
+
+step "dave (kibana-viewers, access ro) can list own API keys, but cannot create one"
+call 200 dave:dave GET /_security/api_key
+call 403 dave:dave POST /_security/api_key '{"name":"dave-key"}'
 
 step "A client cannot set the owner: ES rejects metadata keys that start with _"
 call 400 alice:alice POST /_security/api_key '{"name":"forged-key","metadata":{"_ror":{"owner":"bob"}}}'
 
 step "alice updates her key and sends back the metadata that ES gave, with _ror (Kibana does this). ROR keeps the owner."
-call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"_ror":{"owner":"alice"},"team":"fruit","env":"prod"}}'
+call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"_ror":{"owner":"alice"},"team":"sales","env":"prod"}}'
 call 200 alice:alice GET "/_security/api_key?id=$ALICE_KEY_ID"
 expect_in_body '"_ror":{"owner":"alice"}'
 expect_in_body '"env":"prod"'
 
 step "An update cannot change the owner: ROR ignores _ror in the request and keeps the stored owner"
-call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"_ror":{"owner":"bob"},"team":"fruit"}}'
+call 200 alice:alice PUT "/_security/api_key/$ALICE_KEY_ID" '{"metadata":{"_ror":{"owner":"bob"},"team":"sales"}}'
 call 200 alice:alice GET "/_security/api_key?id=$ALICE_KEY_ID"
 expect_in_body '"_ror":{"owner":"alice"}'
 
 step "Each key runs as its owner, with the current LDAP groups of the owner"
 echo "  (ROR answers 404 for an index that the user cannot read, so the index stays hidden)"
-call 200 "apikey:$ALICE_KEY" GET /logstash-banana-2026/_search
-call 404 "apikey:$ALICE_KEY" GET /logstash-apple-2026/_search
-call 200 "apikey:$BOB_KEY" GET /logstash-apple-2026/_search
-call 404 "apikey:$BOB_KEY" GET /logstash-banana-2026/_search
+call 200 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
+call 404 "apikey:$ALICE_KEY" GET /logstash-finance-2026/_search
+call 200 "apikey:$BOB_KEY" GET /logstash-finance-2026/_search
+call 404 "apikey:$BOB_KEY" GET /logstash-sales-2026/_search
 
 step "A request with an API key cannot create another API key"
 call 403 "apikey:$ALICE_KEY" POST /_security/api_key '{"name":"key-from-key"}'
@@ -124,29 +128,29 @@ call 403 bob:bob DELETE /_security/api_key "{\"ids\":[\"$ALICE_KEY_ID\"],\"owner
 step "An ID that does not exist selects no key. Thus bob can send it (Kibana does this to check for API keys)."
 call 200 bob:bob DELETE /_security/api_key '{"ids":["no-such-api-key"]}'
 
-step "Remove alice from readAccessToIndex-banana in LDAP. Her key loses access to banana."
-ldap_group_member delete alice readAccessToIndex-banana
+step "Remove alice from sales-readers in LDAP. Her key loses access to the sales index."
+ldap_group_member delete alice sales-readers
 sleep "$LDAP_GROUP_CHANGE_WAIT"
-call 403 "apikey:$ALICE_KEY" GET /logstash-banana-2026/_search
+call 403 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
 
-step "Add alice back to readAccessToIndex-banana. Her key gets access again."
-ldap_group_member add alice readAccessToIndex-banana
+step "Add alice back to sales-readers. Her key gets access again."
+ldap_group_member add alice sales-readers
 sleep "$LDAP_GROUP_CHANGE_WAIT"
-call 200 "apikey:$ALICE_KEY" GET /logstash-banana-2026/_search
+call 200 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
 
-step "admin (in api_key_admins) sees all keys and revokes the key of bob"
-call 200 admin:admin GET /_security/api_key
+step "erin (kibana-admins, access admin) sees all keys and revokes the key of bob"
+call 200 erin:erin GET /_security/api_key
 grep -q "$ALICE_KEY_ID" <<< "$LAST_BODY" && grep -q "$BOB_KEY_ID" <<< "$LAST_BODY" &&
   echo "  OK   the response holds the keys of alice and bob" ||
   { echo "  FAIL the response does not hold both keys"; FAILURES=$((FAILURES + 1)); }
-call 200 admin:admin DELETE /_security/api_key "{\"ids\":[\"$BOB_KEY_ID\"]}"
+call 200 erin:erin DELETE /_security/api_key "{\"ids\":[\"$BOB_KEY_ID\"]}"
 
 step "A revoked key stops working at once"
-call 403 "apikey:$BOB_KEY" GET /logstash-apple-2026/_search
+call 403 "apikey:$BOB_KEY" GET /logstash-finance-2026/_search
 
 step "alice revokes her own key. Kibana sends the owner flag with the IDs."
 call 200 alice:alice DELETE /_security/api_key "{\"ids\":[\"$ALICE_KEY_ID\"],\"owner\":true}"
-call 403 "apikey:$ALICE_KEY" GET /logstash-banana-2026/_search
+call 403 "apikey:$ALICE_KEY" GET /logstash-sales-2026/_search
 
 echo
 if [[ "$FAILURES" -eq 0 ]]; then

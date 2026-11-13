@@ -53,27 +53,35 @@ readonlyrest:
   access_control_rules:
     - name: "Kibana admins"
       type: allow
-      ldap_auth: { name: "ldap1", groups_any_of: ["kibana-admins"] }
       kibana:
         access: admin              # manages the keys of all users
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-admins"]
 
     - name: "Kibana users"
       type: allow
-      ldap_auth: { name: "ldap1", groups_any_of: ["kibana-users"] }
       kibana:
         access: rw                 # manages own keys
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-users"]
 
     - name: "Kibana viewers"
       type: allow
-      ldap_auth: { name: "ldap1", groups_any_of: ["kibana-viewers"] }
       kibana:
         access: ro                 # lists own keys only
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-viewers"]
 
     - name: "sales - API key"
       type: allow
       token_authentication:
         type: "api-key"            # no username: the request runs as the owner of the key
-      ldap_authorization: { name: "ldap1", groups_any_of: ["sales-readers"] }
+      ldap_authorization:
+        name: "ldap1"
+        groups_any_of: ["sales-readers"]
       indices: ["logstash-sales-*"]
       actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
 ```

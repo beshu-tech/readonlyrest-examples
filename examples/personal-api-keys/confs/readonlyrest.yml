@@ -1,0 +1,78 @@
+readonlyrest:
+
+  audit:
+    enabled: true
+    outputs: [index]
+
+  access_control_rules:
+
+    - name: "Kibana server"
+      type: allow
+      auth_key: kibana:kibana
+      verbosity: error
+
+    - name: "Runner health checks"
+      type: allow
+      auth_key: admin:admin
+      kibana:
+        access: ro
+
+    - name: "Kibana admins"
+      type: allow
+      kibana:
+        access: admin
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-admins"]
+
+    - name: "Kibana users"
+      type: allow
+      kibana:
+        access: rw
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: ["kibana-users"]
+
+    - name: "Kibana viewers"
+      type: allow
+      kibana:
+        access: ro
+      ldap_auth:
+        name: "ldap1"
+        groups_any_of: [ "kibana-viewers" ]
+
+    # No username: the request runs as the owner of the key, with the current groups of the owner
+    - name: "sales - API key"
+      type: allow
+      token_authentication:
+        type: "api-key"
+      ldap_authorization:
+        name: "ldap1"
+        groups_any_of: ["sales-readers"]
+      indices: ["logstash-sales-*"]
+      actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
+
+    - name: "finance - API key"
+      type: allow
+      token_authentication:
+        type: "api-key"
+      ldap_authorization:
+        name: "ldap1"
+        groups_any_of: ["finance-readers"]
+      indices: ["logstash-finance-*"]
+      actions: ["indices:data/read/*", "indices:admin/shards/search_shards"]
+
+  ldaps:
+    - name: ldap1
+      host: "ldap"
+      port: 389
+      ssl_enabled: false
+      bind_dn: "cn=admin,dc=example,dc=com"
+      bind_password: "admin"
+      users:
+        search_user_base_DN: "ou=People,dc=example,dc=com"
+        user_id_attribute: "uid"
+      groups:
+        search_groups_base_DN: "ou=Groups,dc=example,dc=com"
+        unique_member_attribute: "uniqueMember"
+      cache_ttl: 5s

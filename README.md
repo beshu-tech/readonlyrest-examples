@@ -63,6 +63,7 @@ To stop and clean up:
 | [kibana-reverse-proxy](examples/kibana-reverse-proxy) | Two Kibana nodes behind an Apache HTTPS reverse proxy with sticky-session load balancing, SSL termination, and a configurable base-path rewriting strategy |
 | [fleet](examples/fleet) | Full Elastic Fleet stack: Fleet Server, Elastic Agent with APM, and an instrumented Node.js service, all secured with ReadonlyREST |
 | [mcp-server](examples/mcp-server) | The Elasticsearch MCP server (elastic/mcp-server-elasticsearch) behind ReadonlyREST, with each MCP client's own credentials passed through to ROR |
+| [personal-api-keys](examples/personal-api-keys) | Personal Elasticsearch API keys: each key runs as the user who created it, with the current LDAP groups of the user. Each user manages only own keys. |
 
 ## Project structure
 

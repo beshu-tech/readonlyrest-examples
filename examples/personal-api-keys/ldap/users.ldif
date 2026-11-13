@@ -1,0 +1,71 @@
+# The password of each user is the user name
+
+dn: ou=People,dc=example,dc=com
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Groups,dc=example,dc=com
+objectClass: organizationalUnit
+ou: Groups
+
+dn: uid=alice,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+uid: alice
+cn: Alice
+sn: Alice
+userPassword: alice
+
+dn: uid=bob,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+uid: bob
+cn: Bob
+sn: Bob
+userPassword: bob
+
+dn: uid=carol,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+uid: carol
+cn: Carol
+sn: Carol
+userPassword: carol
+
+dn: uid=dave,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+uid: dave
+cn: Dave
+sn: Dave
+userPassword: dave
+
+dn: uid=erin,ou=People,dc=example,dc=com
+objectClass: inetOrgPerson
+uid: erin
+cn: Erin
+sn: Erin
+userPassword: erin
+
+dn: cn=kibana-admins,ou=Groups,dc=example,dc=com
+objectClass: groupOfUniqueNames
+cn: kibana-admins
+uniqueMember: uid=erin,ou=People,dc=example,dc=com
+
+dn: cn=kibana-users,ou=Groups,dc=example,dc=com
+objectClass: groupOfUniqueNames
+cn: kibana-users
+uniqueMember: uid=alice,ou=People,dc=example,dc=com
+uniqueMember: uid=bob,ou=People,dc=example,dc=com
+
+dn: cn=kibana-viewers,ou=Groups,dc=example,dc=com
+objectClass: groupOfUniqueNames
+cn: kibana-viewers
+uniqueMember: uid=dave,ou=People,dc=example,dc=com
+
+dn: cn=sales-readers,ou=Groups,dc=example,dc=com
+objectClass: groupOfUniqueNames
+cn: sales-readers
+uniqueMember: uid=alice,ou=People,dc=example,dc=com
+uniqueMember: uid=carol,ou=People,dc=example,dc=com
+
+dn: cn=finance-readers,ou=Groups,dc=example,dc=com
+objectClass: groupOfUniqueNames
+cn: finance-readers
+uniqueMember: uid=bob,ou=People,dc=example,dc=com

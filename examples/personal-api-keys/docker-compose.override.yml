@@ -1,0 +1,28 @@
+services:
+
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: ror-ldap
+    hostname: ldap
+    # --copy-service copies the mounted LDIF, so the mount can stay read-only
+    command: --copy-service
+    environment:
+      LDAP_ORGANISATION: "Example"
+      LDAP_DOMAIN: "example.com"
+      LDAP_ADMIN_PASSWORD: "admin"
+      LDAP_TLS: "false"
+    volumes:
+      - ${EXAMPLE_DIR}/ldap/users.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-users.ldif:ro
+    healthcheck:
+      test: ["CMD-SHELL", "ldapsearch -x -H ldap://localhost -D cn=admin,dc=example,dc=com -w admin -b ou=Groups,dc=example,dc=com cn=kibana-users >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      - ror-network
+
+  es-ror:
+    depends_on:
+      ldap:
+        condition: service_healthy
